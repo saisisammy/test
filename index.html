@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ShopMaster">
+<meta name="description" content="ShopMaster Pro – Complete Shop Management">
+<link id="pwaManifest" rel="manifest">
+<title>ShopMaster Pro</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Firebase Compat -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root {
+  --bg: #0f172a;
+  --bg2: #1e293b;
+  --bg3: #334155;
+  --card: #1e293b;
+  --border: #334155;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --orange: #fb923c;
+  --purple: #c084fc;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+input,select,button,textarea{font-family:inherit}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh}
+.screen.on{display:block}
+#loadingScreen.on{display:flex}
+#loginScreen.on{display:flex}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* HEADER */
+.app-hdr{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  border-bottom:1px solid var(--border);
+  padding:14px 16px;position:sticky;top:0;z-index:200;
+}
+.app-hdr h1{font-size:17px;font-weight:800;color:var(--text);line-height:1.2}
+.app-hdr p{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* TAB NAV */
+.tab-nav{
+  display:flex;overflow-x:auto;gap:4px;padding:10px 12px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:60px;z-index:190;scrollbar-width:none;
+}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{
+  padding:7px 14px;border-radius:99px;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+  background:transparent;color:var(--text3);transition:all .2s;
+  letter-spacing:.3px;
+}
+.tab-btn.active{background:var(--accent);color:#0f172a}
+.tab-btn:not(.active):hover{background:var(--bg3);color:var(--text)}
+
+/* PANES */
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* PAGE BODY */
+.page-body{padding:14px;padding-bottom:40px;max-width:520px;margin:0 auto}
+
+/* CARDS */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;
+  transition:border-color .2s;
+}
+.card-sm{padding:10px 12px}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;
+}
+.stat .val{font-size:17px;font-weight:800;font-family:'Space Mono',monospace;margin-top:4px;letter-spacing:-.5px}
+.stat .lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat.accent{border-color:var(--accent);background:rgba(56,189,248,.06)}
+.stat.green{border-color:var(--green);background:rgba(74,222,128,.06)}
+.stat.red{border-color:var(--red);background:rgba(248,113,113,.06)}
+.stat.yellow{border-color:var(--yellow);background:rgba(251,191,36,.06)}
+.stat.purple{border-color:var(--purple);background:rgba(192,132,252,.06)}
+.stat.orange{border-color:var(--orange);background:rgba(251,146,60,.06)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;
+  font-weight:700;font-size:13px;transition:all .15s;letter-spacing:.2px;
+}
+.btn:active{transform:scale(.97)}
+.btn-accent{background:var(--accent);color:#0f172a}
+.btn-accent:hover{background:#7dd3fc}
+.btn-green{background:var(--green);color:#052e16}
+.btn-red{background:var(--red);color:#450a0a}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--border)}
+.btn-wa{background:#25D366;color:#fff;font-size:12px;padding:7px 11px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn-sms{background:var(--accent2);color:#fff;font-size:12px;padding:7px 11px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:7px}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* FORM */
+.field{margin-bottom:14px}
+.lbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.inp{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);font-size:14px;background:var(--bg);
+  color:var(--text);transition:border-color .2s;outline:none;
+}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.inp[readonly]{background:var(--bg2);color:var(--text3)}
+.inp-prefix{
+  display:flex;
+}
+.inp-prefix .prefix{
+  background:var(--bg2);border:1.5px solid var(--border);border-right:none;
+  border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+  padding:11px 12px;color:var(--text3);font-weight:700;font-size:13px;
+  white-space:nowrap;display:flex;align-items:center;
+}
+.inp-prefix .inp{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.inp-prefix-left{background:var(--bg2);border:1.5px solid var(--border);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);padding:11px 12px;color:var(--accent);font-weight:800;font-size:14px;display:flex;align-items:center}
+select.inp option{background:var(--bg2)}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.3px}
+.b-green{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.b-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.b-yellow{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.b-accent{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid rgba(56,189,248,.3)}
+.b-purple{background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)}
+
+/* ALERTS */
+.alert{border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;margin-bottom:8px;border-left:3px solid}
+.alert-red{background:rgba(248,113,113,.08);border-color:var(--red);color:var(--red)}
+.alert-yellow{background:rgba(251,191,36,.08);border-color:var(--yellow);color:var(--yellow)}
+.alert-green{background:rgba(74,222,128,.08);border-color:var(--green);color:var(--green)}
+.alert-accent{background:rgba(56,189,248,.08);border-color:var(--accent);color:var(--accent)}
+
+/* MODALS */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.modal.open{display:flex}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;
+  max-height:92vh;overflow-y:auto;animation:slideUp .22s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-hdr h3{font-size:17px;font-weight:800}
+.modal-close{background:var(--bg3);border:none;color:var(--text2);width:30px;height:30px;border-radius:99px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--text)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:rgba(56,189,248,.08);color:var(--accent);padding:8px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid rgba(51,65,85,.5);color:var(--text2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(56,189,248,.03)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);color:var(--text);padding:11px 18px;
+  border-radius:99px;font-size:13px;font-weight:600;z-index:9999;
+  white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.5);
+  border:1px solid var(--border);display:none;
+  max-width:90vw;text-align:center;
+}
+
+/* FORMULA */
+.formula-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(51,65,85,.4);font-size:13px}
+.formula-row:last-child{border-bottom:none;font-size:15px;font-weight:800;padding-top:12px}
+.formula-row.total{border-top:2px solid var(--border);margin-top:4px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* SALE TYPE TOGGLE */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.type-btn{padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:transparent;color:var(--text3);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s}
+.type-btn.cash.sel{border-color:var(--accent);background:rgba(56,189,248,.1);color:var(--accent)}
+.type-btn.debt.sel{border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red)}
+
+/* CLAIM BOX */
+.claim{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);border-radius:var(--radius-sm);padding:10px;font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;margin:8px 0}
+
+/* DEBT CARD */
+.debt-active{border-left:3px solid var(--red)}
+.debt-paid{border-left:3px solid var(--green);opacity:.7}
+
+/* SNAIL */
+.snail{border-left:3px solid var(--yellow)!important;background:rgba(251,191,36,.04)!important}
+
+/* PROFIT CARD */
+.profit-big{
+  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));
+  border:1px solid rgba(56,189,248,.2);border-radius:var(--radius);
+  padding:20px;text-align:center;margin-bottom:12px;
+}
+.profit-big .num{font-size:38px;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:-2px;margin:6px 0}
+
+/* SHOP PROFIT CARD (admin) */
+.shop-perf{
+  background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(129,140,248,.06));
+  border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);
+  padding:14px;margin-bottom:12px;
+}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.perf-cell{background:rgba(255,255,255,.04);border-radius:8px;padding:8px;text-align:center}
+.perf-cell .cv{font-size:12px;font-weight:800;font-family:'Space Mono',monospace}
+.perf-cell .ck{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* SECTION HEADER */
+.sec-hdr{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* PRODUCT ROW */
+.prod-row{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.prod-row:hover{border-color:var(--accent)}
+.prod-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.prod-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:var(--text3);margin-top:6px}
+.prod-meta span b{color:var(--text)}
+.prod-actions{display:flex;gap:6px;margin-top:10px}
+
+/* ATTR */
+.attr{text-align:center;font-size:11px;color:var(--text3);padding:16px 0;border-top:1px solid var(--border);margin-top:20px}
+.attr b{color:var(--accent)}
+
+/* LOGIN */
+#loginScreen{
+  background:var(--bg);min-height:100vh;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+}
+.login-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:20px;padding:28px 24px;width:100%;max-width:360px;
+}
+.google-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:13px 20px;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .2s;
+}
+.google-btn:hover{border-color:var(--accent);background:rgba(56,189,248,.06)}
+
+/* LOADING SCREEN */
+#loadingScreen{
+  background:var(--bg);min-height:100vh;
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.spin{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:rot .7s linear infinite;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* MONO NUMBERS */
+.mono{font-family:'Space Mono',monospace}
+
+/* INSTALL BANNER */
+#installBanner{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border-top:1px solid rgba(56,189,248,.3);
+  padding:12px 16px;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.5);
+}
+#installBanner.show{display:flex}
+
+/* OFFLINE PILL */
+#offlinePill{
+  display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);
+  background:#1e293b;border:1px solid var(--yellow);color:var(--yellow);
+  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  z-index:700;white-space:nowrap;letter-spacing:.3px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+#offlinePill.show{display:block}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty .ico{font-size:40px;margin-bottom:12px}
+.empty p{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.empty small{font-size:12px}
+
+/* SALE SUMMARY MINI */
+.summary-line{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(51,65,85,.4)}
+.summary-line:last-child{border-bottom:none}
+
+/* ERROR / SUCCESS */
+.err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;margin-top:8px}
+.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:10px 12px;color:var(--green);font-size:13px;margin-top:8px}
+
+/* SNAILING item in stock */
+.snail-tag{font-size:9px;background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.low-tag{font-size:9px;background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+
+@media(min-width:600px){
+  .modal{align-items:center}
+  .modal-box{border-radius:20px;max-width:420px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOADING ===== -->
+<div id="loadingScreen" class="screen on">
+  <div style="text-align:center">
+    <div style="font-size:52px;margin-bottom:12px">🏪</div>
+    <h1 style="font-size:26px;font-weight:800;margin-bottom:4px">ShopMaster Pro</h1>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:28px">Complete Shop Management</p>
+    <div class="spin" style="margin:0 auto"></div>
+    <p id="loadStatus" style="color:var(--text3);font-size:12px;margin-top:16px;min-height:18px"></p>
+  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
+    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
+  </div>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen" class="screen">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:48px;margin-bottom:10px">🏪</div>
+      <h1 style="font-size:28px;font-weight:800">ShopMaster Pro</h1>
+      <p style="color:var(--text3);font-size:13px;margin-top:4px">Kenya's Smart Shop Manager</p>
+    </div>
+    <div class="login-card">
+      <h2 style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px">Sign In</h2>
+      <p style="color:var(--text3);font-size:13px;text-align:center;margin-bottom:20px">Use your registered Google account</p>
+      <button id="gBtn" onclick="doGoogleSignIn()" class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div id="loginErr" class="err" style="display:none"></div>
+      <div id="loginSpin" style="display:none;justify-content:center;margin-top:14px"><div class="spin" style="width:24px;height:24px"></div></div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;line-height:1.6">
+      Shop owners must be registered by admin<br>
+      <span style="color:var(--text3)">Contact administrator for access</span>
+    </p>
+  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
+    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div id="adminPanel" class="screen">
+  <div class="app-hdr">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px">🛡️</div>
+        <div>
+          <h1>ShopMaster Admin</h1>
+          <p id="adminEmail">Administrator</p>
+        </div>
+      </div>
+      <button onclick="doSignOut()" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="aTab('overview',this)">📊 Overview</button>
+    <button class="tab-btn" onclick="aTab('register',this)">➕ Register Shop</button>
+    <button class="tab-btn" onclick="aTab('shops',this)">🏪 All Shops</button>
+  </div>
+  <div class="page-body">
+
+    <!-- Admin Overview -->
+    <div id="a-overview" class="tab-pane active">
+      <div class="sec-hdr">Live Shop Performance</div>
+      <div id="adminOverview"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading shops...</p></div></div>
+    </div>
+
+    <!-- Admin Register -->
+    <div id="a-register" class="tab-pane">
+      <div class="card">
+        <div style="font-size:15px;font-weight:800;margin-bottom:18px">Register New Shop</div>
+        <div class="field"><label class="lbl">Shop Name *</label><input type="text" id="r_n" class="inp" placeholder="e.g. Mama Wanjiku General Store"></div>
+        <div class="field"><label class="lbl">Location *</label><input type="text" id="r_l" class="inp" placeholder="e.g. Westlands, Nairobi"></div>
+        <div class="field"><label class="lbl">Shopkeeper Full Name *</label><input type="text" id="r_kn" class="inp" placeholder="Full name"></div>
+        <div class="field">
+          <label class="lbl">Shopkeeper Phone *</label>
+          <div class="inp-prefix">
+            <span class="prefix">+254</span>
+            <input type="tel" id="r_ph" class="inp" placeholder="7XXXXXXXX" maxlength="9">
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl">Shopkeeper Gmail *</label>
+          <input type="email" id="r_em" class="inp" placeholder="shopkeeper@gmail.com">
+          <p style="font-size:11px;color:var(--text3);margin-top:5px">⚠️ Must be Gmail — used for Google Sign-In login</p>
+        </div>
+        <div id="regErr" class="err" style="display:none"></div>
+        <div id="regOk" class="ok" style="display:none"></div>
+        <button onclick="regShop()" class="btn btn-accent" style="width:100%;margin-top:4px;padding:12px">Register Shop</button>
+      </div>
+    </div>
+
+    <!-- Admin Shops List -->
+    <div id="a-shops" class="tab-pane">
+      <div class="sec-hdr">All Registered Shops</div>
+      <div id="adminShops"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+  </div>
+  <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
+</div>
+
+<!-- ===== SHOP PANEL ===== -->
+<div id="shopPanel" class="screen">
+  <div class="app-hdr">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+        <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);border-radius:10px;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">🏪</div>
+        <div style="min-width:0">
+          <h1 id="sh_name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">My Shop</h1>
+          <p id="sh_loc" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></p>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px">
+        <button onclick="openSettings()" class="btn btn-ghost btn-sm" style="padding:7px 9px">⚙️</button>
+        <button onclick="doSignOut()" class="btn btn-ghost btn-sm">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="sTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab-btn" onclick="sTab('stock',this)">📦 Stock</button>
+    <button class="tab-btn" onclick="sTab('sell',this)">🛒 Sell</button>
+    <button class="tab-btn" onclick="sTab('debtors',this)">💳 Debtors</button>
+    <button class="tab-btn" onclick="sTab('expenses',this)">💸 Expenses</button>
+    <button class="tab-btn" onclick="sTab('profit',this)">📈 Profit</button>
+    <button class="tab-btn" onclick="sTab('audit',this)">📋 Audit</button>
+  </div>
+
+  <div class="page-body">
+
+    <!-- DASHBOARD -->
+    <div id="s-dashboard" class="tab-pane active">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:800;color:var(--accent)" id="d_sName"></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="d_date"></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat accent"><div class="lbl">Stock Value</div><div class="val" id="d_stkVal" style="color:var(--accent)">KES 0</div></div>
+        <div class="stat green"><div class="lbl">Total Sales</div><div class="val" id="d_sales" style="color:var(--green)">KES 0</div></div>
+        <div class="stat red"><div class="lbl">Unpaid Debts</div><div class="val" id="d_debts" style="color:var(--red)">KES 0</div></div>
+        <div class="stat"><div class="lbl">Net Profit</div><div class="val" id="d_profit">KES 0</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat" style="text-align:center"><div class="val" id="d_pCount" style="font-size:30px;color:var(--accent)">0</div><div class="lbl" style="margin-top:4px">Products</div></div>
+        <div class="stat" style="text-align:center"><div class="val" id="d_dCount" style="font-size:30px;color:var(--red)">0</div><div class="lbl" style="margin-top:4px">Active Debtors</div></div>
+        <div class="stat yellow" style="text-align:center"><div class="val" id="d_snailC" style="font-size:30px;color:var(--yellow)">0</div><div class="lbl" style="margin-top:4px">Snailing Items</div></div>
+        <div class="stat purple"><div class="lbl">Expenses</div><div class="val" id="d_expTotal" style="color:var(--purple)">KES 0</div></div>
+      </div>
+      <div id="dashAlerts"></div>
+    </div>
+
+    <!-- STOCK -->
+    <div id="s-stock" class="tab-pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-size:16px;font-weight:800">Products in Stock</span>
+        <button onclick="openModal('mAddProd')" class="btn btn-accent btn-sm">+ Add Product</button>
+      </div>
+      <div id="stockContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- SELL -->
+    <div id="s-sell" class="tab-pane">
+      <!-- Sales Summary -->
+      <div class="card card-sm" style="margin-bottom:14px" id="salesSumCard">
+        <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Sales Summary</div>
+        <div id="salesSumContent"><p style="color:var(--text3);font-size:13px">Loading...</p></div>
+      </div>
+
+      <div style="font-size:16px;font-weight:800;margin-bottom:12px">Record a Sale</div>
+      <div class="card">
+        <div class="field"><label class="lbl">Product *</label>
+          <select id="s_prod" class="inp" onchange="onProdChange()">
+            <option value="">— Select product —</option>
+          </select>
+        </div>
+        <div class="field"><label class="lbl">Quantity *</label><input type="number" id="s_qty" class="inp" placeholder="0" min="1" oninput="calcAmt()"></div>
+        <div class="field"><label class="lbl">Amount (Auto)</label><input type="text" id="s_amt" class="inp" readonly placeholder="KES 0.00"></div>
+        <div class="field">
+          <label class="lbl">Sale Type</label>
+          <div class="type-toggle">
+            <button id="btnCash" onclick="setSaleMode('cash')" class="type-btn cash sel">💵 Cash Sale</button>
+            <button id="btnDebt" onclick="setSaleMode('debt')" class="type-btn debt">📝 Debt Sale</button>
+          </div>
+        </div>
+        <div id="debtFields" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <div class="field"><label class="lbl">Debtor Name *</label><input type="text" id="s_dName" class="inp" placeholder="Full name"></div>
+          <div class="field">
+            <label class="lbl">Phone Number *</label>
+            <div class="inp-prefix">
+              <span class="prefix">+254</span>
+              <input type="tel" id="s_dPhone" class="inp" placeholder="7XXXXXXXX" maxlength="9">
+            </div>
+          </div>
+        </div>
+        <div id="saleErr" class="err" style="display:none"></div>
+        <button onclick="recordSale()" class="btn btn-accent" style="width:100%;padding:12px;margin-top:4px">✓ Record Sale</button>
+      </div>
+
+      <div class="sec-hdr" style="margin-top:20px">Recent Sales</div>
+      <div id="recentSales"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- DEBTORS -->
+    <div id="s-debtors" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:12px">Debtors</div>
+      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--red)">⚠️ Total Unpaid Debts</span>
+        <span class="mono" style="font-weight:800;color:var(--red);font-size:16px" id="totalUnpaid">KES 0</span>
+      </div>
+      <div id="debtorsContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div id="s-expenses" class="tab-pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:16px;font-weight:800">Expenses</span>
+        <button onclick="openModal('mAddExp')" class="btn btn-accent btn-sm">+ Add Expense</button>
+      </div>
+      <div style="background:rgba(192,132,252,.06);border:1px solid rgba(192,132,252,.2);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--purple)">Total Expenses</span>
+        <span class="mono" style="font-weight:800;color:var(--purple);font-size:16px" id="totalExp">KES 0</span>
+      </div>
+      <div id="expContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- PROFIT -->
+    <div id="s-profit" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:14px">Profit Analysis</div>
+      <div id="profitContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Calculating...</p></div></div>
+    </div>
+
+    <!-- AUDIT -->
+    <div id="s-audit" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:14px">Audit Report</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="field">
+          <label class="lbl">Report Period</label>
+          <select id="auditType" class="inp" onchange="onAuditChange()">
+            <option value="today">Today</option>
+            <option value="thisWeek">This Week</option>
+            <option value="thisMonth">This Month</option>
+            <option value="day">Specific Day</option>
+            <option value="week">Specific Week</option>
+            <option value="month">Specific Month</option>
+          </select>
+        </div>
+        <div id="auditDayF" class="field" style="display:none"><label class="lbl">Date</label><input type="date" id="auditDay" class="inp"></div>
+        <div id="auditWeekF" class="field" style="display:none"><label class="lbl">Week Start (Monday)</label><input type="date" id="auditWkStart" class="inp"></div>
+        <div id="auditMonthF" class="field" style="display:none"><label class="lbl">Month</label><input type="month" id="auditMo" class="inp"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <button onclick="genAudit()" class="btn btn-accent">📊 Generate</button>
+          <button onclick="delAuditRecs()" class="btn btn-red btn-ghost">🗑️ Delete Records</button>
+        </div>
+      </div>
+      <div id="auditOutput" style="display:none"></div>
+    </div>
+
+  </div><!-- end page-body -->
+  <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Add Product -->
+<div id="mAddProd" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Add Product to Stock</h3><button class="modal-close" onclick="closeModal('mAddProd')">×</button></div>
+    <div class="field"><label class="lbl">Product Name *</label><input type="text" id="p_n" class="inp" placeholder="e.g. Unga W.W 2kg"></div>
+    <div class="field"><label class="lbl">Buying Price (KES) *</label><input type="number" id="p_b" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Selling Price (KES) *</label><input type="number" id="p_s" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Quantity *</label><input type="number" id="p_q" class="inp" placeholder="0" min="1"></div>
+    <div id="prodErr" class="err" style="display:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mAddProd')" class="btn btn-ghost">Cancel</button>
+      <button onclick="addProd()" class="btn btn-accent">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Expense -->
+<div id="mAddExp" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Add Expense</h3><button class="modal-close" onclick="closeModal('mAddExp')">×</button></div>
+    <div class="field">
+      <label class="lbl">Category *</label>
+      <select id="e_cat" class="inp" onchange="onExpCat()">
+        <option value="salary">Salary</option>
+        <option value="transport">Transport</option>
+        <option value="marketing">Marketing</option>
+        <option value="other">Other (specify)</option>
+      </select>
+    </div>
+    <div id="e_otherF" class="field" style="display:none"><label class="lbl">Specify *</label><input type="text" id="e_other" class="inp" placeholder="Describe the expense"></div>
+    <div class="field"><label class="lbl">Amount (KES) *</label><input type="number" id="e_amt" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Date *</label><input type="date" id="e_date" class="inp"></div>
+    <div id="expErr" class="err" style="display:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mAddExp')" class="btn btn-ghost">Cancel</button>
+      <button onclick="addExp()" class="btn btn-accent">Add Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div id="mConfirm" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="cfm_t">Confirm</h3></div>
+    <p id="cfm_m" style="color:var(--text2);font-size:14px;margin-bottom:20px"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button onclick="closeModal('mConfirm')" class="btn btn-ghost">Cancel</button>
+      <button id="cfm_btn" class="btn btn-red" style="background:var(--red);color:#450a0a">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="mSettings" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Shop Settings</h3><button class="modal-close" onclick="closeModal('mSettings')">×</button></div>
+    <div class="field"><label class="lbl">Shop Name</label><input type="text" id="st_n" class="inp"></div>
+    <div class="field"><label class="lbl">Location</label><input type="text" id="st_l" class="inp"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mSettings')" class="btn btn-ghost">Cancel</button>
+      <button onclick="saveSettings()" class="btn btn-accent">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Offline Pill -->
+<div id="offlinePill">📴 Offline — data cached locally</div>
+
+<!-- Install Banner -->
+<div id="installBanner">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <div style="font-size:28px;flex-shrink:0">🏪</div>
+    <div style="min-width:0">
+      <div style="font-size:13px;font-weight:800;white-space:nowrap">Install ShopMaster Pro</div>
+      <div style="font-size:11px;color:var(--text3);white-space:nowrap">Works offline · Fast home screen access</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="dismissInstall()" class="btn btn-ghost btn-xs">Later</button>
+    <button onclick="doInstall()" class="btn btn-accent btn-sm">📲 Install</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// FIREBASE INIT
+// ═══════════════════════════════════════════════
+firebase.initializeApp({
+  apiKey:"AIzaSyB3E6xFA7EmZIms1PBZjj-OcrO-Rh-vq2I",
+  authDomain:"shopmaster-abdd6.firebaseapp.com",
+  projectId:"shopmaster-abdd6",
+  storageBucket:"shopmaster-abdd6.firebasestorage.app",
+  messagingSenderId:"365547988526",
+  appId:"1:365547988526:web:5760d76dcd3bdd4a3de1bf"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ── Offline persistence (IndexedDB cache for Firestore) ──
+db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+  if(err.code==='failed-precondition') console.warn('ShopMaster: multiple tabs — offline persistence limited to one tab');
+  else if(err.code==='unimplemented') console.warn('ShopMaster: browser does not support Firestore offline persistence');
+});
+
+const ADMIN_UID = 'xgX5qDLpTBeaM34KgT2O20Afwh02';
+const TS = firebase.firestore.FieldValue.serverTimestamp;
+const INC = firebase.firestore.FieldValue.increment;
+
+// PWA Manifest with generated icons
+(async ()=>{
+  function genIcon(size){
+    const c=document.createElement('canvas');
+    c.width=c.height=size;
+    const x=c.getContext('2d');
+    const r=size*0.18;
+    x.fillStyle='#0f172a';
+    x.beginPath();x.roundRect(0,0,size,size,r);x.fill();
+    // Outer glow ring
+    x.strokeStyle='rgba(56,189,248,0.25)';x.lineWidth=size*0.03;
+    x.beginPath();x.roundRect(size*0.05,size*0.05,size*0.9,size*0.9,r*0.8);x.stroke();
+    // Accent circle
+    const g=x.createRadialGradient(size/2,size*0.42,0,size/2,size*0.42,size*0.3);
+    g.addColorStop(0,'#38bdf8');g.addColorStop(1,'#0284c7');
+    x.fillStyle=g;
+    x.beginPath();x.arc(size/2,size*0.42,size*0.28,0,Math.PI*2);x.fill();
+    // Letters SM
+    x.fillStyle='#0f172a';
+    x.font=`900 ${Math.round(size*0.26)}px Arial,sans-serif`;
+    x.textAlign='center';x.textBaseline='middle';
+    x.fillText('SM',size/2,size*0.43);
+    // Bottom label
+    x.fillStyle='#38bdf8';
+    x.font=`700 ${Math.round(size*0.09)}px Arial,sans-serif`;
+    x.fillText('SHOPMASTER',size/2,size*0.79);
+    return new Promise(res=>c.toBlob(b=>res(URL.createObjectURL(b)),'image/png'));
+  }
+  const [ic192,ic512]=await Promise.all([genIcon(192),genIcon(512)]);
+  const m={
+    name:"ShopMaster Pro",
+    short_name:"ShopMaster",
+    description:"Kenya's Smart Shop Management System",
+    start_url:"./",
+    display:"standalone",
+    orientation:"portrait",
+    background_color:"#0f172a",
+    theme_color:"#0f172a",
+    lang:"en",
+    categories:["business","finance","productivity"],
+    icons:[
+      {src:ic192,sizes:"192x192",type:"image/png",purpose:"any maskable"},
+      {src:ic512,sizes:"512x512",type:"image/png",purpose:"any maskable"}
+    ]
+  };
+  const b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});
+  document.getElementById("pwaManifest").href=URL.createObjectURL(b);
+})();
+
+// ═══════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════
+let cUser=null,cShopId=null,cShop=null,saleMode='cash';
+let listeners=[];
+let ld={products:[],sales:[],debtors:[],expenses:[]};
+let auditData=null;
+
+// ═══════════════════════════════════════════════
+// SESSION PERSISTENCE (survives offline restarts)
+// ═══════════════════════════════════════════════
+const SM_SESSION_KEY = 'sm_session_v2';
+
+function saveSession(type, user, shopId, shopData){
+  try{
+    localStorage.setItem(SM_SESSION_KEY, JSON.stringify({
+      type, uid:user.uid, email:user.email,
+      shopId: shopId||null,
+      shopData: shopData||null,
+      savedAt: Date.now()
+    }));
+  }catch(e){}
+}
+function loadSession(){
+  try{ return JSON.parse(localStorage.getItem(SM_SESSION_KEY)||'null'); }
+  catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SM_SESSION_KEY); }catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+auth.onAuthStateChanged(async user=>{
+  const setStatus = t => { const el=G('loadStatus'); if(el) el.textContent=t; };
+
+  if(user){
+    cUser=user;
+    try{
+      if(user.uid===ADMIN_UID){
+        saveSession('admin', user);
+        G('adminEmail').textContent=user.email;
+        hideScreen('loadingScreen');
+        showScreen('adminPanel');
+        initAdmin();
+      } else {
+        setStatus(navigator.onLine ? 'Loading shop data…' : '📴 Restoring offline data…');
+        const shop = await findShop(user.email);
+        if(shop){
+          cShopId=shop.id; cShop=shop.data;
+          saveSession('shop', user, shop.id, shop.data);
+          hideScreen('loadingScreen');
+          showScreen('shopPanel');
+          initShop();
+        } else {
+          hideScreen('loadingScreen');
+          showScreen('loginScreen');
+          showErr('loginErr',`No shop found for ${user.email}. Contact admin.`);
+          auth.signOut();
+        }
+      }
+    } catch(err){
+      // Network error while fetching shop — try session cache
+      console.warn('Auth setup error (likely offline):', err.message);
+      setStatus('📴 Offline — loading from cache…');
+      const sess = loadSession();
+      if(sess && sess.uid===user.uid && sess.type==='shop' && sess.shopId){
+        cShopId = sess.shopId;
+        cShop   = sess.shopData;
+        hideScreen('loadingScreen');
+        showScreen('shopPanel');
+        initShop();
+        toast('📴 Offline mode — showing cached data');
+      } else if(sess && sess.uid===user.uid && sess.type==='admin'){
+        hideScreen('loadingScreen');
+        G('adminEmail').textContent = user.email;
+        showScreen('adminPanel');
+        initAdmin();
+        toast('📴 Offline mode');
+      } else {
+        hideScreen('loadingScreen');
+        showScreen('loginScreen');
+        showErr('loginErr','Offline and no cached session. Please connect to sign in.');
+      }
+    }
+  } else {
+    // No Firebase user — try session cache when offline
+    const sess = loadSession();
+    if(sess && !navigator.onLine){
+      setStatus('📴 Offline — restoring session…');
+      if(sess.type==='shop' && sess.shopId){
+        cShopId = sess.shopId;
+        cShop   = sess.shopData;
+        hideScreen('loadingScreen');
+        showScreen('shopPanel');
+        initShop();
+        toast('📴 Offline mode — showing cached data');
+        return;
+      } else if(sess.type==='admin'){
+        hideScreen('loadingScreen');
+        G('adminEmail').textContent = sess.email||'Administrator';
+        showScreen('adminPanel');
+        initAdmin();
+        toast('📴 Offline mode');
+        return;
+      }
+    }
+    stopAll(); cUser=null; cShopId=null; cShop=null;
+    hideScreen('loadingScreen');
+    showScreen('loginScreen');
+  }
+});
+
+async function doGoogleSignIn(){
+  const btn=G('gBtn'); btn.disabled=true;
+  G('loginErr').style.display='none';
+  G('loginSpin').style.display='flex';
+  try{
+    const p=new firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({prompt:'select_account'});
+    await auth.signInWithPopup(p);
+  }catch(e){
+    showErr('loginErr',e.message);
+    G('loginSpin').style.display='none';
+    btn.disabled=false;
+  }
+}
+
+function doSignOut(){
+  if(confirm('Sign out?')){
+    clearSession();
+    auth.signOut();
+  }
+}
+
+// findShop: network first, then Firestore cache, then session cache
+async function findShop(email){
+  const q = db.collection('shops').where('shopkeeperEmail','==',email.toLowerCase()).limit(1);
+  // Try network (or Firestore offline cache automatically)
+  try{
+    const s = await q.get();
+    if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
+  }catch(netErr){
+    // Network failed — force cache-only source
+    try{
+      const s = await q.get({source:'cache'});
+      if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
+    }catch(cacheErr){
+      // Not in Firestore cache either — let caller use localStorage session
+      throw netErr;
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// SCREEN/TAB HELPERS
+// ═══════════════════════════════════════════════
+function G(id){return document.getElementById(id)}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('on')});
+  const el=G(id); if(!el)return;
+  if(id==='loadingScreen'||id==='loginScreen') el.style.display='flex';
+  else el.style.display='block';
+  el.classList.add('on');
+}
+function hideScreen(id){const el=G(id);if(el){el.style.display='none';el.classList.remove('on')}}
+function setTxt(id,v){const e=G(id);if(e)e.textContent=v}
+function getV(id){const e=G(id);return e?e.value:''}
+
+function openModal(id){G(id).classList.add('open')}
+function closeModal(id){G(id).classList.remove('open')}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+let _tt;
+function toast(msg,ms=3000){
+  const el=G('toast'); el.textContent=msg; el.style.display='block';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.style.display='none',ms);
+}
+
+function confirm2(title,msg,fn){
+  setTxt('cfm_t',title); setTxt('cfm_m',msg);
+  openModal('mConfirm');
+  G('cfm_btn').onclick=()=>{closeModal('mConfirm');fn();};
+}
+
+function showErr(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+function hideErr(id){const e=G(id);if(e)e.style.display='none'}
+function showOk(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+
+function fKES(n){
+  if(isNaN(+n))return '0.00';
+  return (+n).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fDate(d){
+  if(!d)return '-';
+  const dt=d?.toDate?d.toDate():new Date(d);
+  return dt.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'});
+}
+function esc(s){
+  if(!s)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function stopAll(){listeners.forEach(u=>u&&u());listeners=[];}
+
+function aTab(tab,btn){
+  document.querySelectorAll('#adminPanel .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#adminPanel .tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const p=G(`a-${tab}`); if(p)p.classList.add('active');
+  if(tab==='shops')loadAdminShops();
+  if(tab==='overview')initAdmin();
+}
+
+function sTab(tab,btn){
+  document.querySelectorAll('#shopPanel .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#shopPanel .tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const p=G(`s-${tab}`); if(p)p.classList.add('active');
+  if(tab==='profit')renderProfit();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════
+function initAdmin(){
+  const cont=G('adminOverview');
+  const u=db.collection('shops').onSnapshot(async snap=>{
+    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered yet</p><small>Use Register Shop to add the first shop</small></div>';return;}
+    const rows=await Promise.all(snap.docs.map(async doc=>{
+      const s=doc.data(),id=doc.id;
+      const [sl,ex,db2]=await Promise.all([
+        db.collection(`shops/${id}/sales`).get(),
+        db.collection(`shops/${id}/expenses`).get(),
+        db.collection(`shops/${id}/debtors`).where('status','==','active').get()
+      ]);
+      let ts=0,tc=0,te=0,tu=0;
+      sl.forEach(d=>{ts+=d.data().totalSellingPrice||0;tc+=d.data().totalBuyingPrice||0;});
+      ex.forEach(d=>{te+=d.data().amount||0;});
+      db2.forEach(d=>{tu+=d.data().amount||0;});
+      const profit=ts-(tc+te);
+      return{s,profit,ts,te,tu};
+    }));
+    cont.innerHTML=rows.map(({s,profit,ts,te,tu})=>`
+      <div class="shop-perf">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:15px;font-weight:800">${esc(s.name||'Unnamed Shop')}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">📍 ${esc(s.location||'N/A')} &nbsp;|&nbsp; 👤 ${esc(s.shopkeeperName||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')}</div>
+          </div>
+          <span class="badge b-accent">${s.shopkeeperEmail?.split('@')[0]||''}</span>
+        </div>
+        <div class="perf-grid">
+          <div class="perf-cell"><div class="cv" style="color:var(--green)">KES ${fKES(ts)}</div><div class="ck">Sales</div></div>
+          <div class="perf-cell"><div class="cv" style="color:var(--purple)">KES ${fKES(te)}</div><div class="ck">Expenses</div></div>
+          <div class="perf-cell"><div class="cv" style="${profit>=0?'color:var(--green)':'color:var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</div><div class="ck">Profit</div></div>
+        </div>
+        ${tu>0?`<div class="alert alert-yellow" style="margin-top:8px;margin-bottom:0">⚠️ Unpaid debts: <b>KES ${fKES(tu)}</b></div>`:''}
+      </div>`).join('');
+  });
+  listeners.push(u);
+}
+
+function loadAdminShops(){
+  const cont=G('adminShops');
+  const u=db.collection('shops').onSnapshot(snap=>{
+    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered</p></div>';return;}
+    cont.innerHTML=snap.docs.map(doc=>{
+      const s=doc.data();
+      return`<div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:800;font-size:14px;margin-bottom:3px">${esc(s.name||'Unnamed')}</div>
+            <div style="font-size:12px;color:var(--text3)">📍 ${esc(s.location||'N/A')}</div>
+            <div style="font-size:12px;color:var(--text3)">👤 ${esc(s.shopkeeperName||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')} &nbsp;|&nbsp; 📱 +254${esc(s.shopkeeperPhone||'')}</div>
+          </div>
+          <button onclick="adminDelShop('${doc.id}','${esc(s.name)}')" class="btn btn-ghost btn-xs" style="color:var(--red);border-color:rgba(248,113,113,.3)">🗑️ Del</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  listeners.push(u);
+}
+
+async function regShop(){
+  const name=getV('r_n').trim(),loc=getV('r_l').trim(),kn=getV('r_kn').trim();
+  const ph=getV('r_ph').trim(),em=getV('r_em').trim().toLowerCase();
+  hideErr('regErr'); G('regOk').style.display='none';
+  if(!name||!loc||!kn||!ph||!em){showErr('regErr','All fields are required');return;}
+  if(!em.endsWith('@gmail.com')){showErr('regErr','Email must be a Gmail address (@gmail.com)');return;}
+  const ex=await findShop(em);
+  if(ex){showErr('regErr','This Gmail is already registered to another shop');return;}
+  try{
+    await db.collection('shops').add({name,location:loc,shopkeeperName:kn,shopkeeperPhone:ph,shopkeeperEmail:em,createdAt:TS()});
+    showOk('regOk',`✅ "${name}" registered! ${kn} can now sign in with ${em}`);
+    ['r_n','r_l','r_kn','r_ph','r_em'].forEach(id=>G(id).value='');
+    toast('Shop registered!');
+  }catch(e){showErr('regErr',e.message);}
+}
+
+function adminDelShop(id,name){
+  confirm2(`Delete "${name}"?`,'All shop data (products, sales, debtors, expenses) will be permanently deleted!',async()=>{
+    try{
+      for(const col of['products','sales','debtors','expenses']){
+        const s=await db.collection(`shops/${id}/${col}`).get();
+        if(!s.empty){const b=db.batch();s.forEach(d=>b.delete(d.ref));await b.commit();}
+      }
+      await db.collection('shops').doc(id).delete();
+      toast('Shop deleted');
+    }catch(e){toast('Error: '+e.message);}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SHOP INIT
+// ═══════════════════════════════════════════════
+function initShop(){
+  setTxt('sh_name',cShop.name||'My Shop');
+  setTxt('sh_loc',cShop.location||'');
+  setTxt('d_sName',cShop.name||'My Shop');
+  setTxt('d_date',new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  G('e_date').value=new Date().toISOString().split('T')[0];
+  startListeners();
+}
+
+function startListeners(){
+  stopAll();
+
+  // Firestore onSnapshot works offline automatically when persistence is enabled.
+  // includeMetadataChanges lets us know when data is from cache vs server.
+  const snapOpts = {includeMetadataChanges: true};
+
+  const onErr = col => err => {
+    console.warn(`Listener error [${col}]:`, err.message);
+    // On offline error, try loading once from cache
+    db.collection(`shops/${cShopId}/${col}`).get({source:'cache'}).then(snap=>{
+      if(col==='products'){ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));renderStock();updateProdDrop();}
+      if(col==='sales'){ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));renderRecentSales();renderSalesSummary();}
+      if(col==='debtors'){ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));renderDebtors();}
+      if(col==='expenses'){ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExp();}
+      refreshDash();
+    }).catch(()=>{});
+  };
+
+  const u1=db.collection(`shops/${cShopId}/products`).orderBy('addedAt','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderStock();updateProdDrop();refreshDash();
+    }, onErr('products'));
+
+  const u2=db.collection(`shops/${cShopId}/sales`).orderBy('date','desc').limit(200)
+    .onSnapshot(snapOpts, snap=>{
+      ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderRecentSales();renderSalesSummary();refreshDash();
+    }, onErr('sales'));
+
+  const u3=db.collection(`shops/${cShopId}/debtors`).orderBy('createdAt','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderDebtors();refreshDash();
+    }, onErr('debtors'));
+
+  const u4=db.collection(`shops/${cShopId}/expenses`).orderBy('date','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderExp();refreshDash();
+    }, onErr('expenses'));
+
+  listeners.push(u1,u2,u3,u4);
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function refreshDash(){
+  const stockVal=ld.products.reduce((s,p)=>s+(p.quantity||0)*(p.sellingPrice||0),0);
+  const totSales=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const unpaid=active.reduce((s,d)=>s+(d.amount||0),0);
+  const totExp=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const cogs=ld.sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+  const profit=totSales-(cogs+totExp);
+  const snail=snailCount();
+
+  setTxt('d_stkVal',`KES ${fKES(stockVal)}`);
+  setTxt('d_sales',`KES ${fKES(totSales)}`);
+  setTxt('d_debts',`KES ${fKES(unpaid)}`);
+  const pe=G('d_profit'); pe.textContent=`KES ${fKES(profit)}`;
+  pe.style.color=profit>=0?'var(--green)':'var(--red)';
+  setTxt('d_pCount',ld.products.length);
+  setTxt('d_dCount',active.length);
+  setTxt('d_snailC',snail);
+  setTxt('d_expTotal',`KES ${fKES(totExp)}`);
+
+  let alerts='';
+  if(snail>0) alerts+=`<div class="alert alert-yellow">🐌 <b>${snail} product(s)</b> selling very slowly (≤ 1 unit in last 14 days)</div>`;
+  if(unpaid>0) alerts+=`<div class="alert alert-red">⚠️ <b>KES ${fKES(unpaid)}</b> in unpaid debts from ${active.length} debtor(s)</div>`;
+  if(profit<0) alerts+=`<div class="alert alert-red">📉 Running at a loss of <b>KES ${fKES(Math.abs(profit))}</b> — review expenses & pricing</div>`;
+  if(profit>0&&unpaid===0) alerts+=`<div class="alert alert-green">📈 Profitable! Net profit: <b>KES ${fKES(profit)}</b></div>`;
+  G('dashAlerts').innerHTML=alerts;
+}
+
+function snailCount(){
+  const twa=new Date(); twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{
+    const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);
+    if(d>=twa) sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);
+  });
+  return ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1).length;
+}
+
+// ═══════════════════════════════════════════════
+// STOCK
+// ═══════════════════════════════════════════════
+function renderStock(){
+  const c=G('stockContent');
+  if(!ld.products.length){c.innerHTML='<div class="empty"><div class="ico">📦</div><p>No products in stock</p><small>Add your first product above</small></div>';return;}
+  const twa=new Date(); twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
+  c.innerHTML=ld.products.map(p=>{
+    const snail=(p.quantity||0)>0&&(sp[p.id]||0)<=1;
+    const low=(p.quantity||0)<=2&&(p.quantity||0)>0;
+    const val=(p.quantity||0)*(p.sellingPrice||0);
+    const margin=(p.sellingPrice||0)-(p.buyingPrice||0);
+    return`<div class="prod-row${snail?' snail':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="prod-name">${esc(p.name)} ${snail?'<span class="snail-tag">🐌 Snailing</span>':''} ${low?'<span class="low-tag">⚠️ Low</span>':''}</div>
+        <div style="text-align:right">
+          <div class="mono" style="font-weight:800;color:var(--green);font-size:13px">KES ${fKES(val)}</div>
+          <div style="font-size:10px;color:var(--text3)">stock value</div>
+        </div>
+      </div>
+      <div class="prod-meta">
+        <span>Buy: <b>KES ${fKES(p.buyingPrice)}</b></span>
+        <span>Sell: <b style="color:var(--green)">KES ${fKES(p.sellingPrice)}</b></span>
+        <span>Qty: <b style="color:${low?'var(--red)':'var(--accent)'}">${p.quantity||0}</b></span>
+        <span>Margin: <b style="color:${margin>0?'var(--green)':'var(--red)'}">KES ${fKES(margin)}</b></span>
+      </div>
+      <div class="prod-actions">
+        <button onclick="editQty('${p.id}','${esc(p.name)}',${p.quantity||0})" class="btn btn-ghost btn-xs" style="flex:1">✏️ Edit Qty</button>
+        <button onclick="delProd('${p.id}','${esc(p.name)}')" class="btn btn-xs" style="flex:1;background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3)">🗑️ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addProd(){
+  const n=getV('p_n').trim(),b=parseFloat(getV('p_b')),s=parseFloat(getV('p_s')),q=parseInt(getV('p_q'));
+  hideErr('prodErr');
+  if(!n||isNaN(b)||isNaN(s)||isNaN(q)){showErr('prodErr','All fields required');return;}
+  if(b<=0||s<=0||q<=0){showErr('prodErr','All values must be greater than 0');return;}
+  db.collection(`shops/${cShopId}/products`).add({name:n,buyingPrice:b,sellingPrice:s,quantity:q,addedAt:TS(),lastSoldAt:null})
+    .then(()=>{closeModal('mAddProd');toast(`"${n}" added!`);['p_n','p_b','p_s','p_q'].forEach(id=>G(id).value='');})
+    .catch(e=>showErr('prodErr',e.message));
+}
+
+function editQty(id,name,cur){
+  const nv=prompt(`Update quantity for "${name}":`,cur);
+  if(nv===null)return;
+  const q=parseInt(nv);
+  if(isNaN(q)||q<0){toast('Invalid quantity');return;}
+  db.collection(`shops/${cShopId}/products`).doc(id).update({quantity:q})
+    .then(()=>toast('Quantity updated ✓'))
+    .catch(e=>toast('Error: '+e.message));
+}
+
+function delProd(id,name){
+  confirm2(`Delete "${name}"?`,'This product will be removed from stock.',()=>{
+    db.collection(`shops/${cShopId}/products`).doc(id).delete()
+      .then(()=>toast('Product deleted'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SALES
+// ═══════════════════════════════════════════════
+function setSaleMode(m){
+  saleMode=m;
+  G('btnCash').className=`type-btn cash${m==='cash'?' sel':''}`;
+  G('btnDebt').className=`type-btn debt${m==='debt'?' sel':''}`;
+  G('debtFields').style.display=m==='debt'?'block':'none';
+}
+
+function updateProdDrop(){
+  const sel=G('s_prod'),prev=sel.value;
+  sel.innerHTML='<option value="">— Select product —</option>';
+  ld.products.filter(p=>(p.quantity||0)>0).forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id;
+    o.textContent=`${p.name}  (Qty: ${p.quantity} | KES ${fKES(p.sellingPrice)})`;
+    o.dataset.sell=p.sellingPrice;o.dataset.buy=p.buyingPrice;
+    o.dataset.qty=p.quantity;o.dataset.name=p.name;
+    sel.appendChild(o);
+  });
+  if(prev)sel.value=prev;
+  calcAmt();
+}
+
+function onProdChange(){calcAmt();}
+
+function calcAmt(){
+  const sel=G('s_prod'),q=parseInt(getV('s_qty'))||0;
+  const opt=sel.options[sel.selectedIndex];
+  if(sel.value&&q>0&&opt.dataset.sell){
+    G('s_amt').value=`KES ${fKES(parseFloat(opt.dataset.sell)*q)}`;
+  } else {G('s_amt').value='';}
+}
+
+async function recordSale(){
+  const sel=G('s_prod'),q=parseInt(getV('s_qty'));
+  hideErr('saleErr');
+  if(!sel.value||isNaN(q)||q<=0){showErr('saleErr','Select a product and enter valid quantity');return;}
+  const opt=sel.options[sel.selectedIndex];
+  const avail=parseInt(opt.dataset.qty);
+  if(q>avail){showErr('saleErr',`Only ${avail} units available in stock`);return;}
+  const pId=sel.value,pName=opt.dataset.name;
+  const sp=parseFloat(opt.dataset.sell),bp=parseFloat(opt.dataset.buy);
+  const isDebt=saleMode==='debt';
+  if(isDebt){
+    const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
+    if(!dn||!dp){showErr('saleErr','Enter debtor name and phone number');return;}
+    if(dp.length<9){showErr('saleErr','Phone must be 9 digits after +254');return;}
+  }
+  try{
+    const batch=db.batch();
+    const totS=sp*q,totB=bp*q;
+    const sRef=db.collection(`shops/${cShopId}/sales`).doc();
+    batch.set(sRef,{productId:pId,productName:pName,quantity:q,sellingPricePerUnit:sp,buyingPricePerUnit:bp,totalSellingPrice:totS,totalBuyingPrice:totB,isDebt,date:TS(),shopName:cShop.name});
+    batch.update(db.collection(`shops/${cShopId}/products`).doc(pId),{quantity:INC(-q),lastSoldAt:TS()});
+    await batch.commit();
+    if(isDebt){
+      const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
+      const phone=`+254${dp}`;
+      const msg=buildMsg(dn,pName,q,totS,cShop.name);
+      await db.collection(`shops/${cShopId}/debtors`).add({debtorName:dn,phone,productId:pId,productName:pName,quantity:q,amount:totS,status:'active',createdAt:TS(),paidAt:null,claimMessage:msg,shopName:cShop.name});
+    }
+    sel.value='';G('s_qty').value='';G('s_amt').value='';
+    G('s_dName').value='';G('s_dPhone').value='';
+    setSaleMode('cash');
+    toast(isDebt?'📝 Debt sale recorded':'✅ Sale recorded!');
+  }catch(e){showErr('saleErr',e.message);}
+}
+
+function buildMsg(name,product,qty,amount,shopName){
+  return `Dear ${name}, this is a friendly reminder from ${shopName} that you have an outstanding balance of KES ${fKES(amount)} for ${qty} unit(s) of ${product} purchased on credit. Kindly settle your account at your earliest convenience. Thank you for your business. — ${shopName}`;
+}
+
+function renderRecentSales(){
+  const c=G('recentSales');
+  if(!ld.sales.length){c.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No sales yet</p>';return;}
+  c.innerHTML=ld.sales.slice(0,30).map(s=>`
+    <div class="card card-sm" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:700">${esc(s.productName)}
+          ${s.isDebt?'<span class="badge b-red" style="margin-left:4px">DEBT</span>':'<span class="badge b-green" style="margin-left:4px">CASH</span>'}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Qty ${s.quantity} × KES ${fKES(s.sellingPricePerUnit)} &nbsp;|&nbsp; ${fDate(s.date)}</div>
+      </div>
+      <div class="mono" style="font-weight:800;color:var(--green);font-size:13px">KES ${fKES(s.totalSellingPrice)}</div>
+    </div>`).join('');
+}
+
+function renderSalesSummary(){
+  const c=G('salesSumContent');
+  const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const cashS=ld.sales.filter(s=>!s.isDebt).reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const debtS=ld.sales.filter(s=>s.isDebt).reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const unpaidD=ld.debtors.filter(d=>d.status==='active').reduce((s,d)=>s+(d.amount||0),0);
+  const paidD=ld.debtors.filter(d=>d.status==='paid').reduce((s,d)=>s+(d.amount||0),0);
+  let html=`
+    <div class="summary-line"><span style="color:var(--text2)">Total Revenue</span><span class="mono" style="font-weight:800;color:var(--green)">KES ${fKES(totS)}</span></div>
+    <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Cash Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(cashS)}</span></div>
+    <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Debt Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(debtS)}</span></div>`;
+  if(unpaidD>0) html+=`<div class="alert alert-red" style="margin-top:8px;margin-bottom:0;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaidD)}</b></div>`;
+  if(paidD>0) html+=`<div class="alert alert-green" style="margin-top:4px;margin-bottom:0;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidD)}</b></div>`;
+  c.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════
+// DEBTORS
+// ═══════════════════════════════════════════════
+function renderDebtors(){
+  const c=G('debtorsContent');
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const paid=ld.debtors.filter(d=>d.status==='paid');
+  const totU=active.reduce((s,d)=>s+(d.amount||0),0);
+  setTxt('totalUnpaid',`KES ${fKES(totU)}`);
+  if(!ld.debtors.length){c.innerHTML='<div class="empty"><div class="ico">✅</div><p>No debtors!</p><small>All accounts are clear</small></div>';return;}
+  let html='';
+  if(active.length){
+    html+=`<div class="sec-hdr">Active Debts (${active.length})</div>`;
+    active.forEach(d=>{
+      const mEnc=encodeURIComponent(d.claimMessage||'');
+      html+=`<div class="card debt-active" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:14px;font-weight:800">${esc(d.debtorName||'Unknown')}</div>
+            <div style="font-size:12px;color:var(--text3)">${esc(d.productName)} × ${d.quantity||0}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${fDate(d.createdAt)} &nbsp;|&nbsp; 📱 ${esc(d.phone)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="mono" style="font-size:20px;font-weight:800;color:var(--red)">KES ${fKES(d.amount)}</div>
+            <span class="badge b-red">UNPAID</span>
+          </div>
+        </div>
+        <div class="claim">${esc(d.claimMessage||'')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px">
+          <button onclick="sendWA('${esc(d.phone)}','${mEnc}')" class="btn-wa">📱 WA</button>
+          <button onclick="sendSMS('${esc(d.phone)}','${mEnc}')" class="btn-sms">💬 SMS</button>
+          <button onclick="payDebt('${d.id}',${d.amount},'${esc(d.debtorName)}')" class="btn btn-green btn-xs" style="font-size:11px">✅ Paid</button>
+          <button onclick="delDebt('${d.id}','${esc(d.debtorName)}')" class="btn btn-xs" style="background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3);font-size:11px">🗑️ Del</button>
+        </div>
+      </div>`;
+    });
+  }
+  if(paid.length){
+    html+=`<div class="sec-hdr">Settled Debts (${paid.length})</div>`;
+    paid.forEach(d=>{
+      html+=`<div class="card debt-paid" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text2)">${esc(d.debtorName||'')}</div>
+          <div style="font-size:11px;color:var(--text3)">${esc(d.productName)} × ${d.quantity||0}</div>
+          <div style="font-size:11px;color:var(--text3)">Paid: ${fDate(d.paidAt)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="mono" style="font-size:14px;font-weight:700;color:var(--green)">KES ${fKES(d.amount)}</div>
+          <span class="badge b-green">PAID</span>
+        </div>
+      </div>`;
+    });
+  }
+  c.innerHTML=html;
+}
+
+function payDebt(id,amount,name){
+  confirm2('Mark as Paid',`Record payment of KES ${fKES(amount)} from ${name}?`,()=>{
+    db.collection(`shops/${cShopId}/debtors`).doc(id).update({status:'paid',paidAt:TS()})
+      .then(()=>toast(`✅ Payment from ${name} recorded`))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function delDebt(id,name){
+  confirm2('Delete Debtor',`Remove ${name} from debtors list?`,()=>{
+    db.collection(`shops/${cShopId}/debtors`).doc(id).delete()
+      .then(()=>toast('Debtor removed'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function sendWA(phone,msgEnc){
+  window.open(`https://wa.me/${phone.replace('+','')}?text=${msgEnc}`,'_blank');
+}
+function sendSMS(phone,msgEnc){
+  window.location.href=`sms:${phone}?body=${msgEnc}`;
+}
+
+// ═══════════════════════════════════════════════
+// EXPENSES
+// ═══════════════════════════════════════════════
+function onExpCat(){G('e_otherF').style.display=getV('e_cat')==='other'?'block':'none';}
+
+function addExp(){
+  const cat=getV('e_cat'),amt=parseFloat(getV('e_amt')),date=getV('e_date'),other=getV('e_other').trim();
+  hideErr('expErr');
+  if(cat==='other'&&!other){showErr('expErr','Please specify the expense');return;}
+  if(isNaN(amt)||amt<=0){showErr('expErr','Enter valid amount');return;}
+  if(!date){showErr('expErr','Select date');return;}
+  const desc=cat==='other'?other:cat.charAt(0).toUpperCase()+cat.slice(1);
+  db.collection(`shops/${cShopId}/expenses`).add({category:cat,description:desc,amount:amt,date,createdAt:TS(),shopName:cShop.name})
+    .then(()=>{closeModal('mAddExp');toast('Expense added!');G('e_amt').value='';G('e_other').value='';})
+    .catch(e=>showErr('expErr',e.message));
+}
+
+function renderExp(){
+  const c=G('expContent');
+  const tot=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  setTxt('totalExp',`KES ${fKES(tot)}`);
+  if(!ld.expenses.length){c.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No expenses recorded</p>';return;}
+  const ico={salary:'👤',transport:'🚗',marketing:'📢',other:'📝'};
+  c.innerHTML=ld.expenses.map(e=>`
+    <div class="card card-sm" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:700">${ico[e.category]||'📝'} ${esc(e.description)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${e.date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="mono" style="font-weight:800;color:var(--purple)">KES ${fKES(e.amount)}</span>
+        <button onclick="delExp('${e.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function delExp(id){
+  confirm2('Delete Expense','Remove this expense record?',()=>{
+    db.collection(`shops/${cShopId}/expenses`).doc(id).delete()
+      .then(()=>toast('Expense deleted'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PROFIT
+// ═══════════════════════════════════════════════
+function renderProfit(){
+  const c=G('profitContent');
+  const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const cogs=ld.sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+  const totE=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const profit=totS-(cogs+totE);
+  const stkVal=ld.products.reduce((s,p)=>s+(p.quantity||0)*(p.sellingPrice||0),0);
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const paid=ld.debtors.filter(d=>d.status==='paid');
+  const unpaid=active.reduce((s,d)=>s+(d.amount||0),0);
+  const paidAmt=paid.reduce((s,d)=>s+(d.amount||0),0);
+  const expByCat={};
+  ld.expenses.forEach(e=>{expByCat[e.description]=(expByCat[e.description]||0)+e.amount;});
+  // Snailing products
+  const twa=new Date();twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
+  const snailProds=ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1);
+
+  c.innerHTML=`
+    <!-- Profit Big -->
+    <div class="profit-big">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">${esc(cShop?.name||'')} — Net Profit</div>
+      <div class="num" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</div>
+      <div style="font-size:12px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'📈 Shop is profitable':'📉 Running at a loss'}</div>
+    </div>
+
+    <!-- SALES -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➕ SALES</div>
+      <div class="formula-row"><span style="color:var(--text2)">Total Revenue (Cash + Debt)</span><span class="mono" style="font-weight:800;color:var(--green)">KES ${fKES(totS)}</span></div>
+      ${unpaid>0?`<div class="alert alert-red" style="margin-top:8px;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaid)}</b></div>`:''}
+      ${paidAmt>0?`<div class="alert alert-green" style="margin-top:4px;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidAmt)}</b></div>`:''}
+    </div>
+
+    <!-- COGS -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ MONEY IN SOLD STOCK (Cost of Goods Sold)</div>
+      <div class="formula-row"><span style="color:var(--text2)">Buying cost of all sold items</span><span class="mono" style="font-weight:800;color:var(--red)">KES ${fKES(cogs)}</span></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ EXPENSES</div>
+      ${Object.entries(expByCat).map(([k,v])=>`<div class="formula-row"><span style="color:var(--text2)">${esc(k)}</span><span class="mono" style="color:var(--purple)">KES ${fKES(v)}</span></div>`).join('')}
+      <div class="formula-row total"><span style="font-weight:800">Total Expenses</span><span class="mono" style="font-weight:800;color:var(--purple)">KES ${fKES(totE)}</span></div>
+    </div>
+
+    <!-- FORMULA -->
+    <div class="card" style="margin-bottom:10px;background:rgba(56,189,248,.03);border-color:rgba(56,189,248,.15)">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📐 PROFIT CALCULATION</div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px">
+        <div class="formula-row"><span>SALES</span><span style="color:var(--green)">KES ${fKES(totS)}</span></div>
+        <div class="formula-row"><span>− Cost of Goods Sold</span><span style="color:var(--red)">KES ${fKES(cogs)}</span></div>
+        <div class="formula-row"><span>− Expenses</span><span style="color:var(--purple)">KES ${fKES(totE)}</span></div>
+        <div class="formula-row total">
+          <span style="font-size:14px">= NET PROFIT</span>
+          <span style="font-size:18px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURRENT STOCK VALUE -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 MONEY IN CURRENT STOCK</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Value of remaining inventory at selling price</div>
+      <div class="mono" style="font-size:24px;font-weight:800;color:var(--accent)">KES ${fKES(stkVal)}</div>
+    </div>
+
+    <!-- SNAILING STOCK -->
+    ${snailProds.length?`
+    <div class="card" style="margin-bottom:10px;border-left:3px solid var(--yellow);background:rgba(251,191,36,.04)">
+      <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🐌 SNAILING STOCK</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Products with ≤ 1 unit sold in last 14 days</div>
+      ${snailProds.map(p=>`
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(51,65,85,.3)">
+          <span style="color:var(--text2)">${esc(p.name)}</span>
+          <span style="color:var(--yellow)">Qty: ${p.quantity} (Sold: ${sp[p.id]||0})</span>
+        </div>`).join('')}
+    </div>`:`
+    <div class="alert alert-green" style="margin-bottom:10px">✅ No snailing stock — all products moving well</div>`}
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function openSettings(){
+  G('st_n').value=cShop?.name||''; G('st_l').value=cShop?.location||'';
+  openModal('mSettings');
+}
+function saveSettings(){
+  const n=getV('st_n').trim(),l=getV('st_l').trim();
+  if(!n){toast('Shop name required');return;}
+  db.collection('shops').doc(cShopId).update({name:n,location:l})
+    .then(()=>{
+      cShop.name=n;cShop.location=l;
+      setTxt('sh_name',n);setTxt('sh_loc',l);setTxt('d_sName',n);
+      // Keep session cache in sync
+      if(cUser) saveSession('shop', cUser, cShopId, cShop);
+      closeModal('mSettings');toast('Settings saved!');
+    })
+    .catch(e=>toast('Error: '+e.message));
+}
+
+// ═══════════════════════════════════════════════
+// AUDIT
+// ═══════════════════════════════════════════════
+function onAuditChange(){
+  const t=getV('auditType');
+  G('auditDayF').style.display=t==='day'?'block':'none';
+  G('auditWeekF').style.display=t==='week'?'block':'none';
+  G('auditMonthF').style.display=t==='month'?'block':'none';
+}
+
+async function genAudit(){
+  const t=getV('auditType');
+  const now=new Date();let start,end,label;
+  if(t==='today'){
+    start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59,999);
+    label='Today, '+fDate(start);
+  }else if(t==='thisWeek'){
+    const dow=now.getDay()||7;
+    start=new Date(now);start.setDate(now.getDate()-(dow-1));start.setHours(0,0,0,0);
+    end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59,999);
+    label=`This Week (${fDate(start)} – ${fDate(end)})`;
+  }else if(t==='thisMonth'){
+    start=new Date(now.getFullYear(),now.getMonth(),1);
+    end=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59,999);
+    label=start.toLocaleString('en-KE',{month:'long',year:'numeric'});
+  }else if(t==='day'){
+    const v=getV('auditDay');if(!v){toast('Select a date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(v+'T23:59:59');label=fDate(start);
+  }else if(t==='week'){
+    const v=getV('auditWkStart');if(!v){toast('Select week start date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
+    label=`Week of ${fDate(start)}`;
+  }else if(t==='month'){
+    const v=getV('auditMo');if(!v){toast('Select a month');return;}
+    const[yr,mo]=v.split('-');
+    start=new Date(+yr,+mo-1,1);end=new Date(+yr,+mo,0,23,59,59,999);
+    label=start.toLocaleString('en-KE',{month:'long',year:'numeric'});
+  }
+  toast('Generating report...');
+  try{
+    const sTS=firebase.firestore.Timestamp.fromDate(start);
+    const eTS=firebase.firestore.Timestamp.fromDate(end);
+    const sDate=start.toISOString().split('T')[0];
+    const eDate=end.toISOString().split('T')[0];
+    const[slSnap,exSnap,dbSnap]=await Promise.all([
+      db.collection(`shops/${cShopId}/sales`).where('date','>=',sTS).where('date','<=',eTS).orderBy('date','desc').get(),
+      db.collection(`shops/${cShopId}/expenses`).where('date','>=',sDate).where('date','<=',eDate).get(),
+      db.collection(`shops/${cShopId}/debtors`).where('createdAt','>=',sTS).where('createdAt','<=',eTS).get()
+    ]);
+    const sales=slSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const expenses=exSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const debtors=dbSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const tS=sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+    const tC=sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+    const tE=expenses.reduce((s,e)=>s+(e.amount||0),0);
+    const profit=tS-(tC+tE);
+    const unpaidD=debtors.filter(d=>d.status==='active').reduce((s,d)=>s+(d.amount||0),0);
+    auditData={label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD,sDate,eDate,sTS,eTS};
+    showAudit();
+  }catch(e){toast('Error: '+e.message);console.error(e);}
+}
+
+function showAudit(){
+  const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
+  const sn=cShop?.name||'Shop';
+  const c=G('auditOutput');
+  c.style.display='block';
+  c.innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:800">${esc(sn)}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">Audit Report: ${esc(label)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">Generated: ${new Date().toLocaleString('en-KE')}</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat green"><div class="lbl">Sales</div><div class="val" style="color:var(--green);font-size:14px">KES ${fKES(tS)}</div></div>
+      <div class="stat red"><div class="lbl">COGS</div><div class="val" style="color:var(--red);font-size:14px">KES ${fKES(tC)}</div></div>
+      <div class="stat purple"><div class="lbl">Expenses</div><div class="val" style="color:var(--purple);font-size:14px">KES ${fKES(tE)}</div></div>
+      <div class="stat${profit>=0?' green':' red'}"><div class="lbl">Profit</div><div class="val" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:14px">${profit>=0?'+':''}KES ${fKES(profit)}</div></div>
+    </div>
+    ${unpaidD>0?`<div class="alert alert-red" style="margin-bottom:12px">⚠️ Includes unpaid debts of <b>KES ${fKES(unpaidD)}</b></div>`:''}
+    <!-- Sales -->
+    <div class="card" style="margin-bottom:10px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">SALES (${sales.length})</div>
+      ${sales.length?`<table class="tbl"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>Type</th></tr></thead>
+      <tbody>${sales.map(s=>`<tr><td>${esc(s.productName)}</td><td>${s.quantity}</td><td>KES ${fKES(s.totalSellingPrice)}</td><td>${s.isDebt?'⚠️ Debt':'✅ Cash'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No sales in this period</p>'}
+    </div>
+    <!-- Expenses -->
+    <div class="card" style="margin-bottom:10px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">EXPENSES (${expenses.length})</div>
+      ${expenses.length?`<table class="tbl"><thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead>
+      <tbody>${expenses.map(e=>`<tr><td>${esc(e.description)}</td><td>${e.date}</td><td>KES ${fKES(e.amount)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No expenses in this period</p>'}
+    </div>
+    <!-- Debtors -->
+    <div class="card" style="margin-bottom:12px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">DEBTORS (${debtors.length})</div>
+      ${debtors.length?`<table class="tbl"><thead><tr><th>Name</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>${debtors.map(d=>`<tr><td>${esc(d.debtorName||'')}</td><td>${esc(d.productName)}</td><td>KES ${fKES(d.amount)}</td><td>${d.status==='paid'?'✅ Paid':'⚠️ Unpaid'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No new debtors in this period</p>'}
+    </div>
+    <button onclick="dlPDF()" class="btn btn-accent" style="width:100%;padding:13px;font-size:15px;margin-bottom:8px">📥 Download PDF Report</button>
+  `;
+  c.scrollIntoView({behavior:'smooth'});
+}
+
+function dlPDF(){
+  if(!auditData){toast('Generate a report first');return;}
+  const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
+  const sn=cShop?.name||'Shop';
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  // Header
+  doc.setFillColor(15,23,42);doc.rect(0,0,210,30,'F');
+  doc.setFillColor(30,58,138);doc.rect(0,0,210,2,'F');
+  doc.setTextColor(241,245,249);doc.setFontSize(17);doc.setFont('helvetica','bold');
+  doc.text(sn,105,13,{align:'center'});
+  doc.setFontSize(11);doc.setFont('helvetica','normal');doc.setTextColor(148,163,184);
+  doc.text(`Audit Report — ${label}`,105,21,{align:'center'});
+  doc.setFontSize(8);doc.setTextColor(100,116,139);
+  doc.text(`Generated: ${new Date().toLocaleString('en-KE')}`,105,27,{align:'center'});
+  doc.setTextColor(0,0,0);
+  let y=40;
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.text('FINANCIAL SUMMARY',14,y);y+=8;
+  const rows=[['Total Sales:',`KES ${fKES(tS)}`],['Cost of Goods Sold:',`KES ${fKES(tC)}`],['Total Expenses:',`KES ${fKES(tE)}`],['NET PROFIT:',`KES ${fKES(profit)}`]];
+  if(unpaidD>0)rows.push(['Unpaid Debts:',`KES ${fKES(unpaidD)}`]);
+  doc.setFontSize(10);
+  rows.forEach(([l,v])=>{
+    doc.setFont('helvetica',l.startsWith('NET')?'bold':'normal');
+    doc.text(l,14,y);doc.text(v,196,y,{align:'right'});y+=7;
+  });
+  y+=5;
+  if(sales.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('SALES',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Product','Qty','Unit Price','Total','Type']],body:sales.map(s=>[s.productName,s.quantity,`KES ${fKES(s.sellingPricePerUnit)}`,`KES ${fKES(s.totalSellingPrice)}`,s.isDebt?'Debt':'Cash']),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[30,58,138],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+    y=doc.lastAutoTable.finalY+8;
+  }
+  if(expenses.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('EXPENSES',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Description','Date','Amount']],body:expenses.map(e=>[e.description,e.date,`KES ${fKES(e.amount)}`]),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[109,40,217],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+    y=doc.lastAutoTable.finalY+8;
+  }
+  if(debtors.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('DEBTORS',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Name','Product','Qty','Amount','Status']],body:debtors.map(d=>[d.debtorName||'',d.productName,d.quantity,`KES ${fKES(d.amount)}`,d.status==='paid'?'Paid':'Unpaid']),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[185,28,28],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+  }
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);doc.setFontSize(8);doc.setTextColor(148,163,184);
+    doc.text('Powered by Mr. Saisi Nyongesa Sammy',105,290,{align:'center'});
+    doc.text(`Page ${i} of ${pages}`,196,290,{align:'right'});
+  }
+  doc.save(`${sn.replace(/\s+/g,'_')}_Audit_${label.replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
+  toast('PDF downloaded! 📄');
+}
+
+async function delAuditRecs(){
+  const t=getV('auditType');
+  if(!['day','week'].includes(t)){toast('Delete only available for Specific Day or Specific Week');return;}
+  let start,end,label;
+  if(t==='day'){
+    const v=getV('auditDay');if(!v){toast('Select a date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(v+'T23:59:59');label=fDate(start);
+  }else{
+    const v=getV('auditWkStart');if(!v){toast('Select week start');return;}
+    start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
+    label=`Week of ${fDate(start)}`;
+  }
+  confirm2(`Delete Records: ${label}`,'All sales, expenses and debtor records for this period will be permanently deleted. This cannot be undone!',async()=>{
+    try{
+      toast('Deleting...');
+      const sTS=firebase.firestore.Timestamp.fromDate(start);
+      const eTS=firebase.firestore.Timestamp.fromDate(end);
+      const sDate=start.toISOString().split('T')[0];
+      const eDate=end.toISOString().split('T')[0];
+      const[sl,ex,db2]=await Promise.all([
+        db.collection(`shops/${cShopId}/sales`).where('date','>=',sTS).where('date','<=',eTS).get(),
+        db.collection(`shops/${cShopId}/expenses`).where('date','>=',sDate).where('date','<=',eDate).get(),
+        db.collection(`shops/${cShopId}/debtors`).where('createdAt','>=',sTS).where('createdAt','<=',eTS).get()
+      ]);
+      const batch=db.batch();
+      sl.forEach(d=>batch.delete(d.ref));
+      ex.forEach(d=>batch.delete(d.ref));
+      db2.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      G('auditOutput').style.display='none';
+      toast(`Records for ${label} deleted`);
+    }catch(e){toast('Error: '+e.message);}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PWA SERVICE WORKER — cache-first offline shell
+// ═══════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  const CACHE='shopmaster-v2';
+  const SHELL=[
+    'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
+  ];
+  const sw=`
+const CACHE='${CACHE}';
+const SKIP_HOSTS=['firestore.googleapis.com','firebase.googleapis.com','identitytoolkit.googleapis.com','securetoken.googleapis.com','accounts.google.com'];
+self.addEventListener('install',e=>{
+  e.waitUntil(
+    caches.open(CACHE).then(c=>
+      Promise.allSettled(${JSON.stringify(SHELL)}.map(u=>
+        fetch(u,{mode:'cors'}).then(r=>{if(r.ok)c.put(u,r);}).catch(()=>{})
+      ))
+    ).then(()=>self.skipWaiting())
+  );
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+    .then(()=>self.clients.claim())
+  );
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const u=new URL(e.request.url);
+  if(SKIP_HOSTS.some(h=>u.hostname.includes(h)))return;
+  e.respondWith(
+    caches.match(e.request).then(hit=>{
+      const net=fetch(e.request).then(r=>{
+        if(r&&r.ok&&r.type!=='opaque'){
+          const cl=r.clone();
+          caches.open(CACHE).then(c=>c.put(e.request,cl));
+        }
+        return r;
+      }).catch(()=>null);
+      return hit||(net.then(r=>r||new Response('Offline',{status:503})));
+    })
+  );
+});
+`;
+  try{
+    navigator.serviceWorker.register(
+      URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),
+      {scope:'./'}
+    ).catch(()=>{});
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+// INSTALL PROMPT
+// ═══════════════════════════════════════════════
+let _dPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _dPrompt=e;
+  // Delay banner slightly so it doesn't appear on page load
+  setTimeout(()=>{
+    if(!localStorage.getItem('sm_install_dismissed')){
+      document.getElementById('installBanner').classList.add('show');
+    }
+  },4000);
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('installBanner').classList.remove('show');
+  _dPrompt=null;
+  toast('✅ ShopMaster Pro installed!');
+});
+async function doInstall(){
+  if(!_dPrompt)return;
+  _dPrompt.prompt();
+  const{outcome}=await _dPrompt.userChoice;
+  _dPrompt=null;
+  document.getElementById('installBanner').classList.remove('show');
+  if(outcome==='accepted')toast('🎉 Installing ShopMaster Pro…');
+}
+function dismissInstall(){
+  document.getElementById('installBanner').classList.remove('show');
+  localStorage.setItem('sm_install_dismissed','1');
+}
+
+// ═══════════════════════════════════════════════
+// ONLINE / OFFLINE INDICATOR
+// ═══════════════════════════════════════════════
+function updateNetStatus(){
+  const pill=document.getElementById('offlinePill');
+  if(!navigator.onLine){
+    pill.classList.add('show');
+  } else {
+    pill.classList.remove('show');
+  }
+}
+window.addEventListener('online', ()=>{updateNetStatus();toast('🌐 Back online');});
+window.addEventListener('offline',()=>{updateNetStatus();toast('📴 Offline — using cached data');});
+updateNetStatus();
+
+</script>
+</body>
+</html>
