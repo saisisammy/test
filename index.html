@@ -1774,11 +1774,16 @@ async function delAuditRecs(){
 }
 
 // ═══════════════════════════════════════════════
-// PWA SERVICE WORKER — cache-first offline shell
+// PWA SERVICE WORKER — caches the page itself
 // ═══════════════════════════════════════════════
 if('serviceWorker' in navigator){
-  const CACHE='shopmaster-v2';
-  const SHELL=[
+  const CACHE = 'shopmaster-v3';
+  // PAGE_URL is the actual URL of this HTML file — passed into the SW
+  // so it can cache and serve itself on offline refresh.
+  const PAGE_URL = location.href.split('?')[0].split('#')[0];
+
+  const SHELL = [
+    PAGE_URL,   // ← THE KEY FIX: cache the HTML page itself
     'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
     'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
     'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
@@ -1786,48 +1791,102 @@ if('serviceWorker' in navigator){
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
   ];
-  const sw=`
-const CACHE='${CACHE}';
-const SKIP_HOSTS=['firestore.googleapis.com','firebase.googleapis.com','identitytoolkit.googleapis.com','securetoken.googleapis.com','accounts.google.com'];
-self.addEventListener('install',e=>{
+
+  const sw = `
+const CACHE = '${CACHE}';
+const PAGE_URL = ${JSON.stringify(PAGE_URL)};
+const SHELL = ${JSON.stringify(SHELL)};
+const SKIP_HOSTS = [
+  'firestore.googleapis.com','firebase.googleapis.com',
+  'identitytoolkit.googleapis.com','securetoken.googleapis.com',
+  'accounts.google.com','googleapis.com'
+];
+
+// INSTALL: fetch and store every shell resource, including the page HTML
+self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c=>
-      Promise.allSettled(${JSON.stringify(SHELL)}.map(u=>
-        fetch(u,{mode:'cors'}).then(r=>{if(r.ok)c.put(u,r);}).catch(()=>{})
-      ))
-    ).then(()=>self.skipWaiting())
+    caches.open(CACHE).then(cache =>
+      Promise.allSettled(
+        SHELL.map(url =>
+          fetch(url, {cache:'reload'}).then(r => {
+            if(r && r.ok) cache.put(url, r);
+          }).catch(() => {})
+        )
+      )
+    ).then(() => self.skipWaiting())
   );
 });
-self.addEventListener('activate',e=>{
+
+// ACTIVATE: remove old caches
+self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-    .then(()=>self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  const u=new URL(e.request.url);
-  if(SKIP_HOSTS.some(h=>u.hostname.includes(h)))return;
+
+// FETCH: navigation requests (page refresh) → serve cached HTML
+//        all other GETs → cache-first, update in background
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // Let Firebase/Google API calls go straight to network (Firestore handles its own offline)
+  if(SKIP_HOSTS.some(h => url.hostname.endsWith(h))) return;
+
+  // Navigation request = someone loading/refreshing the page
+  if(e.request.mode === 'navigate') {
+    e.respondWith(
+      caches.match(PAGE_URL).then(cached => {
+        if(cached) return cached;
+        return fetch(e.request).catch(() =>
+          new Response('<h2 style="font-family:sans-serif;padding:2rem">ShopMaster is loading, please wait a moment and refresh.</h2>',
+            {headers:{'Content-Type':'text/html'}})
+        );
+      })
+    );
+    return;
+  }
+
+  // All other GET requests: cache-first, background update
   e.respondWith(
-    caches.match(e.request).then(hit=>{
-      const net=fetch(e.request).then(r=>{
-        if(r&&r.ok&&r.type!=='opaque'){
-          const cl=r.clone();
-          caches.open(CACHE).then(c=>c.put(e.request,cl));
+    caches.match(e.request).then(cached => {
+      const network = fetch(e.request).then(r => {
+        if(r && r.ok && r.type !== 'opaque') {
+          const clone = r.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return r;
-      }).catch(()=>null);
-      return hit||(net.then(r=>r||new Response('Offline',{status:503})));
+      }).catch(() => null);
+      return cached || network.then(r => r || new Response('', {status: 503}));
     })
   );
 });
 `;
-  try{
-    navigator.serviceWorker.register(
-      URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),
-      {scope:'./'}
-    ).catch(()=>{});
-  }catch(e){}
+
+  try {
+    const swBlob = new Blob([sw], {type: 'application/javascript'});
+    const swURL  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, {scope: './'})
+      .then(reg => {
+        // After SW is active, make sure the page itself is cached right now
+        // (handles the case where this is the very first load)
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if(nw) nw.addEventListener('statechange', () => {
+            if(nw.state === 'activated') {
+              // Trigger a background cache of the page
+              caches.open(CACHE).then(c =>
+                fetch(PAGE_URL, {cache:'reload'}).then(r => { if(r.ok) c.put(PAGE_URL, r); }).catch(()=>{})
+              );
+            }
+          });
+        });
+      })
+      .catch(() => {});
+  } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════
