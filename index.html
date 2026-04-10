@@ -11,103 +11,67 @@
 <link id="pwaManifest" rel="manifest">
 <title>ShopMaster Pro</title>
 
-<!-- Google Fonts -->
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  OFFLINE PWA STRATEGY — READ BEFORE EDITING                ║
+  ╠══════════════════════════════════════════════════════════════╣
+  ║  PROBLEM WITH PREVIOUS VERSIONS:                           ║
+  ║  blob:URL service workers get a NEW URL on every page load ║
+  ║  → Chrome sees a "new" SW → reinstalls → deletes old cache ║
+  ║  → offline refresh = blank page                            ║
+  ║                                                            ║
+  ║  THIS VERSION'S FIX:                                       ║
+  ║  1. The PAGE caches ITSELF into CacheStorage on every      ║
+  ║     online load (no SW needed for this step).              ║
+  ║  2. The SW NEVER deletes the cache (fixed name 'sm-v1').   ║
+  ║  3. SW intercepts navigate → serves from cache.            ║
+  ║  4. Firestore enablePersistence handles data offline.      ║
+  ║  5. localStorage session backup handles auth offline.      ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-<!-- Firebase Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-:root {
-  --bg: #0f172a;
-  --bg2: #1e293b;
-  --bg3: #334155;
-  --card: #1e293b;
-  --border: #334155;
-  --accent: #38bdf8;
-  --accent2: #818cf8;
-  --green: #4ade80;
-  --red: #f87171;
-  --yellow: #fbbf24;
-  --orange: #fb923c;
-  --purple: #c084fc;
-  --text: #f1f5f9;
-  --text2: #94a3b8;
-  --text3: #64748b;
-  --radius: 14px;
-  --radius-sm: 8px;
+:root{
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--card:#1e293b;--border:#334155;
+  --accent:#38bdf8;--accent2:#818cf8;--green:#4ade80;--red:#f87171;
+  --yellow:#fbbf24;--orange:#fb923c;--purple:#c084fc;
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --radius:14px;--radius-sm:8px;
 }
-
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 input,select,button,textarea{font-family:inherit}
-
-/* SCREENS */
 .screen{display:none;min-height:100vh}
 .screen.on{display:block}
-#loadingScreen.on{display:flex}
-#loginScreen.on{display:flex}
-
-/* SCROLLBAR */
+#loadingScreen.on,#loginScreen.on{display:flex}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-
-/* HEADER */
-.app-hdr{
-  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-  border-bottom:1px solid var(--border);
-  padding:14px 16px;position:sticky;top:0;z-index:200;
-}
+.app-hdr{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:200}
 .app-hdr h1{font-size:17px;font-weight:800;color:var(--text);line-height:1.2}
 .app-hdr p{font-size:11px;color:var(--text3);margin-top:1px}
-
-/* TAB NAV */
-.tab-nav{
-  display:flex;overflow-x:auto;gap:4px;padding:10px 12px;
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  position:sticky;top:60px;z-index:190;scrollbar-width:none;
-}
+.tab-nav{display:flex;overflow-x:auto;gap:4px;padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:190;scrollbar-width:none}
 .tab-nav::-webkit-scrollbar{display:none}
-.tab-btn{
-  padding:7px 14px;border-radius:99px;border:none;
-  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
-  background:transparent;color:var(--text3);transition:all .2s;
-  letter-spacing:.3px;
-}
+.tab-btn{padding:7px 14px;border-radius:99px;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:transparent;color:var(--text3);transition:all .2s;letter-spacing:.3px}
 .tab-btn.active{background:var(--accent);color:#0f172a}
 .tab-btn:not(.active):hover{background:var(--bg3);color:var(--text)}
-
-/* PANES */
 .tab-pane{display:none}
 .tab-pane.active{display:block}
-
-/* PAGE BODY */
 .page-body{padding:14px;padding-bottom:40px;max-width:520px;margin:0 auto}
-
-/* CARDS */
-.card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px;
-  transition:border-color .2s;
-}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:border-color .2s}
 .card-sm{padding:10px 12px}
-
-/* STAT CARDS */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:12px 14px;
-}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
 .stat .val{font-size:17px;font-weight:800;font-family:'Space Mono',monospace;margin-top:4px;letter-spacing:-.5px}
 .stat .lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .stat.accent{border-color:var(--accent);background:rgba(56,189,248,.06)}
@@ -115,14 +79,7 @@ input,select,button,textarea{font-family:inherit}
 .stat.red{border-color:var(--red);background:rgba(248,113,113,.06)}
 .stat.yellow{border-color:var(--yellow);background:rgba(251,191,36,.06)}
 .stat.purple{border-color:var(--purple);background:rgba(192,132,252,.06)}
-.stat.orange{border-color:var(--orange);background:rgba(251,146,60,.06)}
-
-/* BUTTONS */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:10px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;
-  font-weight:700;font-size:13px;transition:all .15s;letter-spacing:.2px;
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-weight:700;font-size:13px;transition:all .15s;letter-spacing:.2px}
 .btn:active{transform:scale(.97)}
 .btn-accent{background:var(--accent);color:#0f172a}
 .btn-accent:hover{background:#7dd3fc}
@@ -135,214 +92,101 @@ input,select,button,textarea{font-family:inherit}
 .btn-sm{padding:7px 12px;font-size:12px;border-radius:7px}
 .btn-xs{padding:5px 10px;font-size:11px;border-radius:6px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-
-/* FORM */
 .field{margin-bottom:14px}
 .lbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
-.inp{
-  width:100%;padding:11px 14px;border:1.5px solid var(--border);
-  border-radius:var(--radius-sm);font-size:14px;background:var(--bg);
-  color:var(--text);transition:border-color .2s;outline:none;
-}
+.inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--bg);color:var(--text);transition:border-color .2s;outline:none}
 .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
 .inp[readonly]{background:var(--bg2);color:var(--text3)}
-.inp-prefix{
-  display:flex;
-}
-.inp-prefix .prefix{
-  background:var(--bg2);border:1.5px solid var(--border);border-right:none;
-  border-radius:var(--radius-sm) 0 0 var(--radius-sm);
-  padding:11px 12px;color:var(--text3);font-weight:700;font-size:13px;
-  white-space:nowrap;display:flex;align-items:center;
-}
+.inp-prefix{display:flex}
+.inp-prefix .prefix{background:var(--bg2);border:1.5px solid var(--border);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);padding:11px 12px;color:var(--text3);font-weight:700;font-size:13px;white-space:nowrap;display:flex;align-items:center}
 .inp-prefix .inp{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.inp-prefix-left{background:var(--bg2);border:1.5px solid var(--border);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);padding:11px 12px;color:var(--accent);font-weight:800;font-size:14px;display:flex;align-items:center}
 select.inp option{background:var(--bg2)}
-
-/* BADGES */
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.3px}
 .b-green{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
 .b-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
 .b-yellow{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
 .b-accent{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid rgba(56,189,248,.3)}
 .b-purple{background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)}
-
-/* ALERTS */
 .alert{border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;margin-bottom:8px;border-left:3px solid}
 .alert-red{background:rgba(248,113,113,.08);border-color:var(--red);color:var(--red)}
 .alert-yellow{background:rgba(251,191,36,.08);border-color:var(--yellow);color:var(--yellow)}
 .alert-green{background:rgba(74,222,128,.08);border-color:var(--green);color:var(--green)}
 .alert-accent{background:rgba(56,189,248,.08);border-color:var(--accent);color:var(--accent)}
-
-/* MODALS */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
 .modal.open{display:flex}
-.modal-box{
-  background:var(--bg2);border:1px solid var(--border);
-  border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;
-  max-height:92vh;overflow-y:auto;animation:slideUp .22s ease;
-}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .22s ease}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .modal-hdr h3{font-size:17px;font-weight:800}
 .modal-close{background:var(--bg3);border:none;color:var(--text2);width:30px;height:30px;border-radius:99px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
-.modal-close:hover{color:var(--text)}
-
-/* TABLE */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{background:rgba(56,189,248,.08);color:var(--accent);padding:8px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .tbl td{padding:8px;border-bottom:1px solid rgba(51,65,85,.5);color:var(--text2)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:rgba(56,189,248,.03)}
-
-/* TOAST */
-.toast{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  background:var(--bg3);color:var(--text);padding:11px 18px;
-  border-radius:99px;font-size:13px;font-weight:600;z-index:9999;
-  white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.5);
-  border:1px solid var(--border);display:none;
-  max-width:90vw;text-align:center;
-}
-
-/* FORMULA */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--text);padding:11px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.5);border:1px solid var(--border);display:none;max-width:90vw;text-align:center}
 .formula-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(51,65,85,.4);font-size:13px}
 .formula-row:last-child{border-bottom:none;font-size:15px;font-weight:800;padding-top:12px}
 .formula-row.total{border-top:2px solid var(--border);margin-top:4px}
-
-/* DIVIDER */
 .divider{height:1px;background:var(--border);margin:14px 0}
-
-/* SALE TYPE TOGGLE */
 .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
 .type-btn{padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:transparent;color:var(--text3);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s}
 .type-btn.cash.sel{border-color:var(--accent);background:rgba(56,189,248,.1);color:var(--accent)}
 .type-btn.debt.sel{border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red)}
-
-/* CLAIM BOX */
 .claim{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);border-radius:var(--radius-sm);padding:10px;font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;margin:8px 0}
-
-/* DEBT CARD */
 .debt-active{border-left:3px solid var(--red)}
 .debt-paid{border-left:3px solid var(--green);opacity:.7}
-
-/* SNAIL */
 .snail{border-left:3px solid var(--yellow)!important;background:rgba(251,191,36,.04)!important}
-
-/* PROFIT CARD */
-.profit-big{
-  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));
-  border:1px solid rgba(56,189,248,.2);border-radius:var(--radius);
-  padding:20px;text-align:center;margin-bottom:12px;
-}
+.profit-big{background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));border:1px solid rgba(56,189,248,.2);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:12px}
 .profit-big .num{font-size:38px;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:-2px;margin:6px 0}
-
-/* SHOP PROFIT CARD (admin) */
-.shop-perf{
-  background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(129,140,248,.06));
-  border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);
-  padding:14px;margin-bottom:12px;
-}
+.shop-perf{background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(129,140,248,.06));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .perf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
 .perf-cell{background:rgba(255,255,255,.04);border-radius:8px;padding:8px;text-align:center}
 .perf-cell .cv{font-size:12px;font-weight:800;font-family:'Space Mono',monospace}
 .perf-cell .ck{font-size:10px;color:var(--text3);margin-top:2px}
-
-/* SECTION HEADER */
 .sec-hdr{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
 .sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* PRODUCT ROW */
 .prod-row{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
 .prod-row:hover{border-color:var(--accent)}
 .prod-name{font-size:14px;font-weight:800;margin-bottom:4px}
 .prod-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:var(--text3);margin-top:6px}
 .prod-meta span b{color:var(--text)}
 .prod-actions{display:flex;gap:6px;margin-top:10px}
-
-/* ATTR */
 .attr{text-align:center;font-size:11px;color:var(--text3);padding:16px 0;border-top:1px solid var(--border);margin-top:20px}
 .attr b{color:var(--accent)}
-
-/* LOGIN */
-#loginScreen{
-  background:var(--bg);min-height:100vh;flex-direction:column;
-  align-items:center;justify-content:center;padding:20px;
-}
-.login-card{
-  background:var(--bg2);border:1px solid var(--border);
-  border-radius:20px;padding:28px 24px;width:100%;max-width:360px;
-}
-.google-btn{
-  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
-  background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  padding:13px 20px;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;
-  transition:all .2s;
-}
+#loginScreen{background:var(--bg);min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:360px}
+.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 20px;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
 .google-btn:hover{border-color:var(--accent);background:rgba(56,189,248,.06)}
-
-/* LOADING SCREEN */
-#loadingScreen{
-  background:var(--bg);min-height:100vh;
-  flex-direction:column;align-items:center;justify-content:center;
-}
-.spin{
-  width:36px;height:36px;border:3px solid var(--border);
-  border-top-color:var(--accent);border-radius:50%;
-  animation:rot .7s linear infinite;
-}
+#loadingScreen{background:var(--bg);min-height:100vh;flex-direction:column;align-items:center;justify-content:center}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
-
-/* MONO NUMBERS */
 .mono{font-family:'Space Mono',monospace}
-
-/* INSTALL BANNER */
-#installBanner{
-  display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;
-  background:linear-gradient(135deg,#1e293b,#0f172a);
-  border-top:1px solid rgba(56,189,248,.3);
-  padding:12px 16px;align-items:center;justify-content:space-between;gap:10px;
-  box-shadow:0 -4px 24px rgba(0,0,0,.5);
-}
-#installBanner.show{display:flex}
-
-/* OFFLINE PILL */
-#offlinePill{
-  display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);
-  background:#1e293b;border:1px solid var(--yellow);color:var(--yellow);
-  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;
-  z-index:700;white-space:nowrap;letter-spacing:.3px;
-  box-shadow:0 2px 12px rgba(0,0,0,.4);
-}
-#offlinePill.show{display:block}
-
-/* EMPTY STATE */
 .empty{text-align:center;padding:40px 20px;color:var(--text3)}
 .empty .ico{font-size:40px;margin-bottom:12px}
 .empty p{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:4px}
 .empty small{font-size:12px}
-
-/* SALE SUMMARY MINI */
 .summary-line{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(51,65,85,.4)}
 .summary-line:last-child{border-bottom:none}
-
-/* ERROR / SUCCESS */
 .err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;margin-top:8px}
 .ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:10px 12px;color:var(--green);font-size:13px;margin-top:8px}
-
-/* SNAILING item in stock */
 .snail-tag{font-size:9px;background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 .low-tag{font-size:9px;background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 
-@media(min-width:600px){
-  .modal{align-items:center}
-  .modal-box{border-radius:20px;max-width:420px}
-}
+/* OFFLINE PILL */
+#offlinePill{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--yellow);color:var(--yellow);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;z-index:700;white-space:nowrap;letter-spacing:.3px;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+#offlinePill.show{display:block}
+
+/* INSTALL BANNER */
+#installBanner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;background:linear-gradient(135deg,#1e293b,#0f172a);border-top:1px solid rgba(56,189,248,.3);padding:12px 16px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 -4px 24px rgba(0,0,0,.5)}
+#installBanner.show{display:flex}
+
+@media(min-width:600px){.modal{align-items:center}.modal-box{border-radius:20px;max-width:420px}}
 </style>
 </head>
 <body>
 
-<!-- ===== LOADING ===== -->
+<!-- LOADING -->
 <div id="loadingScreen" class="screen on">
   <div style="text-align:center">
     <div style="font-size:52px;margin-bottom:12px">🏪</div>
@@ -351,12 +195,10 @@ select.inp option{background:var(--bg2)}
     <div class="spin" style="margin:0 auto"></div>
     <p id="loadStatus" style="color:var(--text3);font-size:12px;margin-top:16px;min-height:18px"></p>
   </div>
-  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
-    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
-  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
 </div>
 
-<!-- ===== LOGIN ===== -->
+<!-- LOGIN -->
 <div id="loginScreen" class="screen">
   <div style="width:100%;max-width:360px">
     <div style="text-align:center;margin-bottom:28px">
@@ -374,26 +216,18 @@ select.inp option{background:var(--bg2)}
       <div id="loginErr" class="err" style="display:none"></div>
       <div id="loginSpin" style="display:none;justify-content:center;margin-top:14px"><div class="spin" style="width:24px;height:24px"></div></div>
     </div>
-    <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;line-height:1.6">
-      Shop owners must be registered by admin<br>
-      <span style="color:var(--text3)">Contact administrator for access</span>
-    </p>
+    <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;line-height:1.6">Shop owners must be registered by admin<br><span style="color:var(--text3)">Contact administrator for access</span></p>
   </div>
-  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
-    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
-  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
 </div>
 
-<!-- ===== ADMIN PANEL ===== -->
+<!-- ADMIN PANEL -->
 <div id="adminPanel" class="screen">
   <div class="app-hdr">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px">🛡️</div>
-        <div>
-          <h1>ShopMaster Admin</h1>
-          <p id="adminEmail">Administrator</p>
-        </div>
+        <div><h1>ShopMaster Admin</h1><p id="adminEmail">Administrator</p></div>
       </div>
       <button onclick="doSignOut()" class="btn btn-ghost btn-sm">Sign Out</button>
     </div>
@@ -404,49 +238,37 @@ select.inp option{background:var(--bg2)}
     <button class="tab-btn" onclick="aTab('shops',this)">🏪 All Shops</button>
   </div>
   <div class="page-body">
-
-    <!-- Admin Overview -->
     <div id="a-overview" class="tab-pane active">
       <div class="sec-hdr">Live Shop Performance</div>
       <div id="adminOverview"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading shops...</p></div></div>
     </div>
-
-    <!-- Admin Register -->
     <div id="a-register" class="tab-pane">
       <div class="card">
         <div style="font-size:15px;font-weight:800;margin-bottom:18px">Register New Shop</div>
         <div class="field"><label class="lbl">Shop Name *</label><input type="text" id="r_n" class="inp" placeholder="e.g. Mama Wanjiku General Store"></div>
         <div class="field"><label class="lbl">Location *</label><input type="text" id="r_l" class="inp" placeholder="e.g. Westlands, Nairobi"></div>
         <div class="field"><label class="lbl">Shopkeeper Full Name *</label><input type="text" id="r_kn" class="inp" placeholder="Full name"></div>
-        <div class="field">
-          <label class="lbl">Shopkeeper Phone *</label>
-          <div class="inp-prefix">
-            <span class="prefix">+254</span>
-            <input type="tel" id="r_ph" class="inp" placeholder="7XXXXXXXX" maxlength="9">
-          </div>
+        <div class="field"><label class="lbl">Shopkeeper Phone *</label>
+          <div class="inp-prefix"><span class="prefix">+254</span><input type="tel" id="r_ph" class="inp" placeholder="7XXXXXXXX" maxlength="9"></div>
         </div>
-        <div class="field">
-          <label class="lbl">Shopkeeper Gmail *</label>
+        <div class="field"><label class="lbl">Shopkeeper Gmail *</label>
           <input type="email" id="r_em" class="inp" placeholder="shopkeeper@gmail.com">
-          <p style="font-size:11px;color:var(--text3);margin-top:5px">⚠️ Must be Gmail — used for Google Sign-In login</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:5px">⚠️ Must be Gmail — used for Google Sign-In</p>
         </div>
         <div id="regErr" class="err" style="display:none"></div>
         <div id="regOk" class="ok" style="display:none"></div>
         <button onclick="regShop()" class="btn btn-accent" style="width:100%;margin-top:4px;padding:12px">Register Shop</button>
       </div>
     </div>
-
-    <!-- Admin Shops List -->
     <div id="a-shops" class="tab-pane">
       <div class="sec-hdr">All Registered Shops</div>
       <div id="adminShops"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
     </div>
-
   </div>
   <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
 </div>
 
-<!-- ===== SHOP PANEL ===== -->
+<!-- SHOP PANEL -->
 <div id="shopPanel" class="screen">
   <div class="app-hdr">
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -463,7 +285,6 @@ select.inp option{background:var(--bg2)}
       </div>
     </div>
   </div>
-
   <div class="tab-nav">
     <button class="tab-btn active" onclick="sTab('dashboard',this)">📊 Dashboard</button>
     <button class="tab-btn" onclick="sTab('stock',this)">📦 Stock</button>
@@ -473,7 +294,6 @@ select.inp option{background:var(--bg2)}
     <button class="tab-btn" onclick="sTab('profit',this)">📈 Profit</button>
     <button class="tab-btn" onclick="sTab('audit',this)">📋 Audit</button>
   </div>
-
   <div class="page-body">
 
     <!-- DASHBOARD -->
@@ -508,23 +328,18 @@ select.inp option{background:var(--bg2)}
 
     <!-- SELL -->
     <div id="s-sell" class="tab-pane">
-      <!-- Sales Summary -->
       <div class="card card-sm" style="margin-bottom:14px" id="salesSumCard">
         <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Sales Summary</div>
         <div id="salesSumContent"><p style="color:var(--text3);font-size:13px">Loading...</p></div>
       </div>
-
       <div style="font-size:16px;font-weight:800;margin-bottom:12px">Record a Sale</div>
       <div class="card">
         <div class="field"><label class="lbl">Product *</label>
-          <select id="s_prod" class="inp" onchange="onProdChange()">
-            <option value="">— Select product —</option>
-          </select>
+          <select id="s_prod" class="inp" onchange="onProdChange()"><option value="">— Select product —</option></select>
         </div>
         <div class="field"><label class="lbl">Quantity *</label><input type="number" id="s_qty" class="inp" placeholder="0" min="1" oninput="calcAmt()"></div>
         <div class="field"><label class="lbl">Amount (Auto)</label><input type="text" id="s_amt" class="inp" readonly placeholder="KES 0.00"></div>
-        <div class="field">
-          <label class="lbl">Sale Type</label>
+        <div class="field"><label class="lbl">Sale Type</label>
           <div class="type-toggle">
             <button id="btnCash" onclick="setSaleMode('cash')" class="type-btn cash sel">💵 Cash Sale</button>
             <button id="btnDebt" onclick="setSaleMode('debt')" class="type-btn debt">📝 Debt Sale</button>
@@ -532,18 +347,13 @@ select.inp option{background:var(--bg2)}
         </div>
         <div id="debtFields" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
           <div class="field"><label class="lbl">Debtor Name *</label><input type="text" id="s_dName" class="inp" placeholder="Full name"></div>
-          <div class="field">
-            <label class="lbl">Phone Number *</label>
-            <div class="inp-prefix">
-              <span class="prefix">+254</span>
-              <input type="tel" id="s_dPhone" class="inp" placeholder="7XXXXXXXX" maxlength="9">
-            </div>
+          <div class="field"><label class="lbl">Phone Number *</label>
+            <div class="inp-prefix"><span class="prefix">+254</span><input type="tel" id="s_dPhone" class="inp" placeholder="7XXXXXXXX" maxlength="9"></div>
           </div>
         </div>
         <div id="saleErr" class="err" style="display:none"></div>
         <button onclick="recordSale()" class="btn btn-accent" style="width:100%;padding:12px;margin-top:4px">✓ Record Sale</button>
       </div>
-
       <div class="sec-hdr" style="margin-top:20px">Recent Sales</div>
       <div id="recentSales"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
     </div>
@@ -581,8 +391,7 @@ select.inp option{background:var(--bg2)}
     <div id="s-audit" class="tab-pane">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">Audit Report</div>
       <div class="card" style="margin-bottom:14px">
-        <div class="field">
-          <label class="lbl">Report Period</label>
+        <div class="field"><label class="lbl">Report Period</label>
           <select id="auditType" class="inp" onchange="onAuditChange()">
             <option value="today">Today</option>
             <option value="thisWeek">This Week</option>
@@ -603,13 +412,11 @@ select.inp option{background:var(--bg2)}
       <div id="auditOutput" style="display:none"></div>
     </div>
 
-  </div><!-- end page-body -->
+  </div>
   <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
 </div>
 
-<!-- ===== MODALS ===== -->
-
-<!-- Add Product -->
+<!-- MODALS -->
 <div id="mAddProd" class="modal">
   <div class="modal-box">
     <div class="modal-hdr"><h3>Add Product to Stock</h3><button class="modal-close" onclick="closeModal('mAddProd')">×</button></div>
@@ -625,17 +432,13 @@ select.inp option{background:var(--bg2)}
   </div>
 </div>
 
-<!-- Add Expense -->
 <div id="mAddExp" class="modal">
   <div class="modal-box">
     <div class="modal-hdr"><h3>Add Expense</h3><button class="modal-close" onclick="closeModal('mAddExp')">×</button></div>
-    <div class="field">
-      <label class="lbl">Category *</label>
+    <div class="field"><label class="lbl">Category *</label>
       <select id="e_cat" class="inp" onchange="onExpCat()">
-        <option value="salary">Salary</option>
-        <option value="transport">Transport</option>
-        <option value="marketing">Marketing</option>
-        <option value="other">Other (specify)</option>
+        <option value="salary">Salary</option><option value="transport">Transport</option>
+        <option value="marketing">Marketing</option><option value="other">Other (specify)</option>
       </select>
     </div>
     <div id="e_otherF" class="field" style="display:none"><label class="lbl">Specify *</label><input type="text" id="e_other" class="inp" placeholder="Describe the expense"></div>
@@ -649,19 +452,17 @@ select.inp option{background:var(--bg2)}
   </div>
 </div>
 
-<!-- Confirm -->
 <div id="mConfirm" class="modal">
   <div class="modal-box">
     <div class="modal-hdr"><h3 id="cfm_t">Confirm</h3></div>
     <p id="cfm_m" style="color:var(--text2);font-size:14px;margin-bottom:20px"></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button onclick="closeModal('mConfirm')" class="btn btn-ghost">Cancel</button>
-      <button id="cfm_btn" class="btn btn-red" style="background:var(--red);color:#450a0a">Confirm</button>
+      <button id="cfm_btn" class="btn btn-red">Confirm</button>
     </div>
   </div>
 </div>
 
-<!-- Settings -->
 <div id="mSettings" class="modal">
   <div class="modal-box">
     <div class="modal-hdr"><h3>Shop Settings</h3><button class="modal-close" onclick="closeModal('mSettings')">×</button></div>
@@ -674,19 +475,14 @@ select.inp option{background:var(--bg2)}
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast"></div>
-
-<!-- Offline Pill -->
-<div id="offlinePill">📴 Offline — data cached locally</div>
-
-<!-- Install Banner -->
+<div id="offlinePill">📴 Offline — cached data</div>
 <div id="installBanner">
   <div style="display:flex;align-items:center;gap:10px;min-width:0">
     <div style="font-size:28px;flex-shrink:0">🏪</div>
     <div style="min-width:0">
       <div style="font-size:13px;font-weight:800;white-space:nowrap">Install ShopMaster Pro</div>
-      <div style="font-size:11px;color:var(--text3);white-space:nowrap">Works offline · Fast home screen access</div>
+      <div style="font-size:11px;color:var(--text3);white-space:nowrap">Works offline · Fast access</div>
     </div>
   </div>
   <div style="display:flex;gap:8px;flex-shrink:0">
@@ -696,9 +492,175 @@ select.inp option{background:var(--bg2)}
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// FIREBASE INIT
-// ═══════════════════════════════════════════════
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+// ░░  OFFLINE LAYER 1 — SELF-CACHE THE HTML PAGE  ░░
+//
+// The page fetches itself from the network and stores the
+// response in CacheStorage under the key of its own URL.
+// This runs on EVERY online load, keeping the cache fresh.
+// The SW's navigate handler then serves this cached copy
+// for all future refreshes, online or offline.
+//
+// WHY NOT RELY ON THE SW INSTALL FOR THIS?
+// blob:-URL service workers get a new script URL on every
+// page load → Chrome re-installs the SW every time → during
+// install, if offline, fetch() fails → page never gets cached
+// → blank page on next offline refresh.
+// ═══════════════════════════════════════════════════════════════
+
+const SM_CACHE = 'sm-v1';  // Fixed name — NEVER changes, NEVER deleted
+const SM_PAGE  = (()=>{ const u=location.href; return u.split('?')[0].split('#')[0]; })();
+
+async function cacheThisPage(){
+  if(!('caches' in window)) return;
+  try{
+    // Fetch the page file fresh from network
+    const resp = await fetch(SM_PAGE, {cache:'no-store'});
+    if(!resp || !resp.ok) return;
+    const cache = await caches.open(SM_CACHE);
+    await cache.put(SM_PAGE, resp);
+    // Also ensure external scripts are cached
+    const scripts = [
+      'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+      'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
+      'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
+    ];
+    await Promise.allSettled(scripts.map(async url=>{
+      const existing = await cache.match(url);
+      if(existing) return; // already cached
+      const r = await fetch(url);
+      if(r && r.ok) cache.put(url, r.clone());
+    }));
+  }catch(e){
+    // Offline or fetch error — existing cache remains intact, that's fine
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ░░  OFFLINE LAYER 2 — SERVICE WORKER  ░░
+//
+// Intercepts ALL navigation requests (page refresh) and serves
+// the HTML from the cache filled by cacheThisPage() above.
+// Intercepts CDN script fetches and serves from cache.
+// NEVER deletes any cache — avoids the "cache wiped offline" bug.
+// ═══════════════════════════════════════════════════════════════
+
+async function registerSW(){
+  if(!('serviceWorker' in navigator)) return;
+
+  // Firebase / Google API hosts — SW must NOT intercept these;
+  // Firestore's own offline engine (IndexedDB) handles them.
+  const SKIP = [
+    'firestore.googleapis.com',
+    'firebase.googleapis.com',
+    'identitytoolkit.googleapis.com',
+    'securetoken.googleapis.com',
+    'accounts.google.com',
+    'oauth2.googleapis.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
+  ];
+
+  const swSrc = `
+/* ShopMaster SW — intercepts navigation and CDN resources */
+const CACHE   = '${SM_CACHE}';
+const PAGE    = ${JSON.stringify(SM_PAGE)};
+const SKIP    = ${JSON.stringify(SKIP)};
+
+self.addEventListener('install', e => {
+  // skipWaiting so this SW takes control immediately on every load
+  // (avoids a "waiting" SW sitting around doing nothing)
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  // claim() so this SW controls the page right away
+  // NOTE: we deliberately do NOT delete any caches here.
+  //       Deleting caches while offline is the root cause of blank pages.
+  e.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // Pass Firebase/Google API calls straight through — Firestore handles its own offline
+  if(SKIP.some(h => url.hostname.includes(h))) return;
+
+  // ── Navigation: return cached HTML shell ──
+  if(e.request.mode === 'navigate'){
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match(PAGE).then(cached => {
+          if(cached){
+            // Serve from cache immediately (works offline)
+            // Optionally update cache in background if online
+            if(navigator.onLine){
+              fetch(PAGE, {cache:'no-store'})
+                .then(r=>{ if(r&&r.ok) cache.put(PAGE,r); })
+                .catch(()=>{});
+            }
+            return cached;
+          }
+          // Not cached yet — try network, fall back to friendly message
+          return fetch(e.request).catch(()=>
+            new Response(
+              '<!DOCTYPE html><html><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>ShopMaster</title></head>'+
+              '<body style="background:#0f172a;color:#f1f5f9;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;text-align:center">'+
+              '<div style="font-size:52px">🏪</div>'+
+              '<h2 style="margin:12px 0 8px;font-size:22px">ShopMaster Pro</h2>'+
+              '<p style="color:#64748b;font-size:14px">You need to open this app once while online<br>to enable offline access.</p>'+
+              '</body></html>',
+              {headers:{'Content-Type':'text/html;charset=utf-8'}}
+            )
+          );
+        })
+      )
+    );
+    return;
+  }
+
+  // ── All other GETs: cache-first, background update ──
+  e.respondWith(
+    caches.open(CACHE).then(cache =>
+      cache.match(e.request).then(cached => {
+        const network = fetch(e.request).then(r=>{
+          if(r && r.ok && r.type !== 'opaque'){
+            cache.put(e.request, r.clone());
+          }
+          return r;
+        }).catch(()=>null);
+        return cached || network;
+      })
+    )
+  );
+});
+`;
+
+  try{
+    const swBlob = new Blob([swSrc], {type:'application/javascript'});
+    const swURL  = URL.createObjectURL(swBlob);
+    await navigator.serviceWorker.register(swURL, {scope:'./'});
+  }catch(e){
+    console.warn('SW registration failed:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ░░  OFFLINE LAYER 3 — FIRESTORE PERSISTENCE (data layer)  ░░
+//
+// Firestore's built-in IndexedDB cache keeps all collections
+// available offline. onSnapshot fires from cache immediately,
+// then again when server responds. Writes are queued offline
+// and auto-synced when network is restored.
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Firebase init ────────────────────────────────────────────
 firebase.initializeApp({
   apiKey:"AIzaSyB3E6xFA7EmZIms1PBZjj-OcrO-Rh-vq2I",
   authDomain:"shopmaster-abdd6.firebaseapp.com",
@@ -707,242 +669,235 @@ firebase.initializeApp({
   messagingSenderId:"365547988526",
   appId:"1:365547988526:web:5760d76dcd3bdd4a3de1bf"
 });
-const auth = firebase.auth();
-const db = firebase.firestore();
 
-// ── Offline persistence (IndexedDB cache for Firestore) ──
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// Force auth to persist in LOCAL storage (survives browser restarts)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+// Enable Firestore offline persistence (IndexedDB)
 db.enablePersistence({synchronizeTabs:true}).catch(err=>{
-  if(err.code==='failed-precondition') console.warn('ShopMaster: multiple tabs — offline persistence limited to one tab');
-  else if(err.code==='unimplemented') console.warn('ShopMaster: browser does not support Firestore offline persistence');
+  if(err.code === 'failed-precondition')
+    console.warn('SM: Multiple tabs open — offline persistence limited to one tab');
+  else if(err.code === 'unimplemented')
+    console.warn('SM: Browser does not support Firestore offline persistence');
 });
 
 const ADMIN_UID = 'xgX5qDLpTBeaM34KgT2O20Afwh02';
-const TS = firebase.firestore.FieldValue.serverTimestamp;
+const TS  = firebase.firestore.FieldValue.serverTimestamp;
 const INC = firebase.firestore.FieldValue.increment;
 
-// PWA Manifest with generated icons
-(async ()=>{
-  function genIcon(size){
-    const c=document.createElement('canvas');
-    c.width=c.height=size;
-    const x=c.getContext('2d');
-    const r=size*0.18;
-    x.fillStyle='#0f172a';
-    x.beginPath();x.roundRect(0,0,size,size,r);x.fill();
-    // Outer glow ring
-    x.strokeStyle='rgba(56,189,248,0.25)';x.lineWidth=size*0.03;
-    x.beginPath();x.roundRect(size*0.05,size*0.05,size*0.9,size*0.9,r*0.8);x.stroke();
-    // Accent circle
-    const g=x.createRadialGradient(size/2,size*0.42,0,size/2,size*0.42,size*0.3);
-    g.addColorStop(0,'#38bdf8');g.addColorStop(1,'#0284c7');
-    x.fillStyle=g;
-    x.beginPath();x.arc(size/2,size*0.42,size*0.28,0,Math.PI*2);x.fill();
-    // Letters SM
-    x.fillStyle='#0f172a';
-    x.font=`900 ${Math.round(size*0.26)}px Arial,sans-serif`;
-    x.textAlign='center';x.textBaseline='middle';
-    x.fillText('SM',size/2,size*0.43);
-    // Bottom label
-    x.fillStyle='#38bdf8';
-    x.font=`700 ${Math.round(size*0.09)}px Arial,sans-serif`;
-    x.fillText('SHOPMASTER',size/2,size*0.79);
-    return new Promise(res=>c.toBlob(b=>res(URL.createObjectURL(b)),'image/png'));
-  }
-  const [ic192,ic512]=await Promise.all([genIcon(192),genIcon(512)]);
-  const m={
-    name:"ShopMaster Pro",
-    short_name:"ShopMaster",
-    description:"Kenya's Smart Shop Management System",
-    start_url:"./",
-    display:"standalone",
-    orientation:"portrait",
-    background_color:"#0f172a",
-    theme_color:"#0f172a",
-    lang:"en",
-    categories:["business","finance","productivity"],
-    icons:[
-      {src:ic192,sizes:"192x192",type:"image/png",purpose:"any maskable"},
-      {src:ic512,sizes:"512x512",type:"image/png",purpose:"any maskable"}
-    ]
-  };
-  const b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});
-  document.getElementById("pwaManifest").href=URL.createObjectURL(b);
-})();
+// ─── Kick off SW registration + self-caching ──────────────────
+registerSW();
+if(navigator.onLine) cacheThisPage(); // self-cache page immediately if online
+window.addEventListener('online', cacheThisPage); // re-cache when coming back online
 
-// ═══════════════════════════════════════════════
-// APP STATE
-// ═══════════════════════════════════════════════
-let cUser=null,cShopId=null,cShop=null,saleMode='cash';
+// ═══════════════════════════════════════════════════════════════
+// ░░  OFFLINE LAYER 4 — AUTH SESSION BACKUP (localStorage)  ░░
+//
+// Firebase Auth LOCAL persistence already handles this well,
+// but onAuthStateChanged still needs to fire before we can
+// call findShop(). If Firestore is unreachable offline, findShop
+// throws. We back up shop info to localStorage so we can
+// reconstruct the session entirely from local data.
+// ═══════════════════════════════════════════════════════════════
+
+const LS_SESSION = 'sm_sess_v3';
+
+function saveSession(role, user, shopId, shopData){
+  try{
+    localStorage.setItem(LS_SESSION, JSON.stringify({
+      role, uid:user.uid, email:user.email||'',
+      shopId:shopId||null, shopData:shopData||null, ts:Date.now()
+    }));
+  }catch(e){}
+}
+function getSession(){
+  try{ return JSON.parse(localStorage.getItem(LS_SESSION)||'null'); }catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(LS_SESSION); }catch(e){}
+}
+
+// ─── App state ────────────────────────────────────────────────
+let cUser=null, cShopId=null, cShop=null, saleMode='cash';
 let listeners=[];
 let ld={products:[],sales:[],debtors:[],expenses:[]};
 let auditData=null;
 
-// ═══════════════════════════════════════════════
-// SESSION PERSISTENCE (survives offline restarts)
-// ═══════════════════════════════════════════════
-const SM_SESSION_KEY = 'sm_session_v2';
-
-function saveSession(type, user, shopId, shopData){
-  try{
-    localStorage.setItem(SM_SESSION_KEY, JSON.stringify({
-      type, uid:user.uid, email:user.email,
-      shopId: shopId||null,
-      shopData: shopData||null,
-      savedAt: Date.now()
-    }));
-  }catch(e){}
-}
-function loadSession(){
-  try{ return JSON.parse(localStorage.getItem(SM_SESSION_KEY)||'null'); }
-  catch(e){ return null; }
-}
-function clearSession(){
-  try{ localStorage.removeItem(SM_SESSION_KEY); }catch(e){}
-}
-
-// ═══════════════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════════════
+// ─── Auth flow ────────────────────────────────────────────────
 auth.onAuthStateChanged(async user=>{
-  const setStatus = t => { const el=G('loadStatus'); if(el) el.textContent=t; };
+  const status = t=>{ const e=G('loadStatus'); if(e) e.textContent=t; };
 
-  if(user){
-    cUser=user;
-    try{
-      if(user.uid===ADMIN_UID){
-        saveSession('admin', user);
-        G('adminEmail').textContent=user.email;
-        hideScreen('loadingScreen');
-        showScreen('adminPanel');
-        initAdmin();
-      } else {
-        setStatus(navigator.onLine ? 'Loading shop data…' : '📴 Restoring offline data…');
-        const shop = await findShop(user.email);
-        if(shop){
-          cShopId=shop.id; cShop=shop.data;
-          saveSession('shop', user, shop.id, shop.data);
-          hideScreen('loadingScreen');
-          showScreen('shopPanel');
-          initShop();
-        } else {
-          hideScreen('loadingScreen');
-          showScreen('loginScreen');
-          showErr('loginErr',`No shop found for ${user.email}. Contact admin.`);
-          auth.signOut();
-        }
-      }
-    } catch(err){
-      // Network error while fetching shop — try session cache
-      console.warn('Auth setup error (likely offline):', err.message);
-      setStatus('📴 Offline — loading from cache…');
-      const sess = loadSession();
-      if(sess && sess.uid===user.uid && sess.type==='shop' && sess.shopId){
-        cShopId = sess.shopId;
-        cShop   = sess.shopData;
-        hideScreen('loadingScreen');
-        showScreen('shopPanel');
-        initShop();
-        toast('📴 Offline mode — showing cached data');
-      } else if(sess && sess.uid===user.uid && sess.type==='admin'){
-        hideScreen('loadingScreen');
-        G('adminEmail').textContent = user.email;
-        showScreen('adminPanel');
-        initAdmin();
-        toast('📴 Offline mode');
-      } else {
-        hideScreen('loadingScreen');
-        showScreen('loginScreen');
-        showErr('loginErr','Offline and no cached session. Please connect to sign in.');
-      }
-    }
-  } else {
-    // No Firebase user — try session cache when offline
-    const sess = loadSession();
+  if(!user){
+    // No Firebase user. Check if we have a valid offline session.
+    const sess = getSession();
     if(sess && !navigator.onLine){
-      setStatus('📴 Offline — restoring session…');
-      if(sess.type==='shop' && sess.shopId){
-        cShopId = sess.shopId;
-        cShop   = sess.shopData;
-        hideScreen('loadingScreen');
-        showScreen('shopPanel');
-        initShop();
-        toast('📴 Offline mode — showing cached data');
-        return;
-      } else if(sess.type==='admin'){
-        hideScreen('loadingScreen');
-        G('adminEmail').textContent = sess.email||'Administrator';
-        showScreen('adminPanel');
-        initAdmin();
-        toast('📴 Offline mode');
-        return;
-      }
+      status('📴 Restoring offline session…');
+      await bootFromSession(sess);
+      return;
     }
-    stopAll(); cUser=null; cShopId=null; cShop=null;
-    hideScreen('loadingScreen');
+    stopAll(); cUser=cShopId=cShop=null;
     showScreen('loginScreen');
+    return;
+  }
+
+  cUser = user;
+
+  if(user.uid === ADMIN_UID){
+    saveSession('admin', user);
+    G('adminEmail').textContent = user.email;
+    showScreen('adminPanel');
+    initAdmin();
+    return;
+  }
+
+  // Regular shopkeeper — need shop record
+  status(navigator.onLine ? 'Loading shop data…' : '📴 Restoring offline data…');
+
+  try{
+    const shop = await findShop(user.email);
+    if(!shop){
+      showScreen('loginScreen');
+      showErr('loginErr', `No shop found for ${user.email}. Contact admin.`);
+      auth.signOut();
+      return;
+    }
+    cShopId = shop.id;
+    cShop   = shop.data;
+    saveSession('shop', user, shop.id, shop.data);
+    showScreen('shopPanel');
+    initShop();
+  }catch(err){
+    // Network error (offline and Firestore cache miss) — fall back to localStorage
+    console.warn('findShop failed (probably offline):', err.message);
+    const sess = getSession();
+    if(sess && sess.uid === user.uid && sess.role === 'shop' && sess.shopId){
+      await bootFromSession(sess);
+    }else{
+      showScreen('loginScreen');
+      showErr('loginErr', '📴 Offline and no cached session. Connect to internet first.');
+    }
   }
 });
 
-async function doGoogleSignIn(){
+async function bootFromSession(sess){
+  if(sess.role === 'admin'){
+    G('adminEmail').textContent = sess.email||'Administrator';
+    showScreen('adminPanel');
+    initAdmin();
+    toast('📴 Offline mode');
+  }else if(sess.role === 'shop'){
+    cShopId = sess.shopId;
+    cShop   = sess.shopData;
+    showScreen('shopPanel');
+    initShop();
+    toast('📴 Offline — showing cached data');
+  }else{
+    showScreen('loginScreen');
+  }
+}
+
+// findShop: try network/cache (Firestore handles both), fall back to {source:'cache'}
+async function findShop(email){
+  const q = db.collection('shops')
+    .where('shopkeeperEmail','==',email.toLowerCase())
+    .limit(1);
+  try{
+    const snap = await q.get();
+    if(!snap.empty){ const d=snap.docs[0]; return{id:d.id,data:d.data()}; }
+    return null;
+  }catch(netErr){
+    // Force cache-only read
+    try{
+      const snap = await q.get({source:'cache'});
+      if(!snap.empty){ const d=snap.docs[0]; return{id:d.id,data:d.data()}; }
+    }catch(cacheErr){ /* not in cache either */ }
+    throw netErr; // let caller fall back to localStorage session
+  }
+}
+
+function doGoogleSignIn(){
   const btn=G('gBtn'); btn.disabled=true;
   G('loginErr').style.display='none';
   G('loginSpin').style.display='flex';
-  try{
-    const p=new firebase.auth.GoogleAuthProvider();
-    p.setCustomParameters({prompt:'select_account'});
-    await auth.signInWithPopup(p);
-  }catch(e){
-    showErr('loginErr',e.message);
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:'select_account'});
+  auth.signInWithPopup(provider).catch(e=>{
+    showErr('loginErr', e.message);
     G('loginSpin').style.display='none';
     btn.disabled=false;
-  }
+  });
 }
 
 function doSignOut(){
-  if(confirm('Sign out?')){
-    clearSession();
-    auth.signOut();
-  }
+  if(!confirm('Sign out?')) return;
+  clearSession();
+  stopAll();
+  auth.signOut();
 }
 
-// findShop: network first, then Firestore cache, then session cache
-async function findShop(email){
-  const q = db.collection('shops').where('shopkeeperEmail','==',email.toLowerCase()).limit(1);
-  // Try network (or Firestore offline cache automatically)
-  try{
-    const s = await q.get();
-    if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
-  }catch(netErr){
-    // Network failed — force cache-only source
-    try{
-      const s = await q.get({source:'cache'});
-      if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
-    }catch(cacheErr){
-      // Not in Firestore cache either — let caller use localStorage session
-      throw netErr;
-    }
+// ═══════════════════════════════════════════════════════════════
+// PWA MANIFEST
+// ═══════════════════════════════════════════════════════════════
+(async()=>{
+  function genIcon(size){
+    const c=document.createElement('canvas'); c.width=c.height=size;
+    const x=c.getContext('2d'), r=size*.18;
+    x.fillStyle='#0f172a'; x.beginPath(); x.roundRect(0,0,size,size,r); x.fill();
+    x.strokeStyle='rgba(56,189,248,.25)'; x.lineWidth=size*.03;
+    x.beginPath(); x.roundRect(size*.05,size*.05,size*.9,size*.9,r*.8); x.stroke();
+    const g=x.createRadialGradient(size/2,size*.42,0,size/2,size*.42,size*.3);
+    g.addColorStop(0,'#38bdf8'); g.addColorStop(1,'#0284c7');
+    x.fillStyle=g; x.beginPath(); x.arc(size/2,size*.42,size*.28,0,Math.PI*2); x.fill();
+    x.fillStyle='#0f172a'; x.font=`900 ${Math.round(size*.26)}px Arial,sans-serif`;
+    x.textAlign='center'; x.textBaseline='middle'; x.fillText('SM',size/2,size*.43);
+    x.fillStyle='#38bdf8'; x.font=`700 ${Math.round(size*.09)}px Arial,sans-serif`;
+    x.fillText('SHOPMASTER',size/2,size*.79);
+    return new Promise(res=>c.toBlob(b=>res(URL.createObjectURL(b)),'image/png'));
   }
-  return null;
-}
+  const [i192,i512] = await Promise.all([genIcon(192),genIcon(512)]);
+  const m = {
+    name:'ShopMaster Pro', short_name:'ShopMaster',
+    description:"Kenya's Smart Shop Management System",
+    start_url:'./', display:'standalone', orientation:'portrait',
+    background_color:'#0f172a', theme_color:'#0f172a', lang:'en',
+    categories:['business','finance','productivity'],
+    icons:[
+      {src:i192,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+      {src:i512,sizes:'512x512',type:'image/png',purpose:'any maskable'}
+    ]
+  };
+  const b=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
+  document.getElementById('pwaManifest').href=URL.createObjectURL(b);
+})();
 
-// ═══════════════════════════════════════════════
-// SCREEN/TAB HELPERS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════
 function G(id){return document.getElementById(id)}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('on')});
-  const el=G(id); if(!el)return;
-  if(id==='loadingScreen'||id==='loginScreen') el.style.display='flex';
-  else el.style.display='block';
+  const el=G(id); if(!el) return;
+  el.style.display=(id==='loadingScreen'||id==='loginScreen')?'flex':'block';
   el.classList.add('on');
 }
-function hideScreen(id){const el=G(id);if(el){el.style.display='none';el.classList.remove('on')}}
 function setTxt(id,v){const e=G(id);if(e)e.textContent=v}
 function getV(id){const e=G(id);return e?e.value:''}
-
 function openModal(id){G(id).classList.add('open')}
 function closeModal(id){G(id).classList.remove('open')}
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+function showErr(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+function hideErr(id){const e=G(id);if(e)e.style.display='none'}
+function showOk(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function fKES(n){return isNaN(+n)?'0.00':(+n).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fDate(d){
+  if(!d) return '-';
+  const dt=d?.toDate?d.toDate():(d instanceof Date?d:new Date(d));
+  return dt.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'});
+}
+function stopAll(){listeners.forEach(u=>u&&u());listeners=[];}
 
 let _tt;
 function toast(msg,ms=3000){
@@ -956,52 +911,46 @@ function confirm2(title,msg,fn){
   G('cfm_btn').onclick=()=>{closeModal('mConfirm');fn();};
 }
 
-function showErr(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
-function hideErr(id){const e=G(id);if(e)e.style.display='none'}
-function showOk(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+document.querySelectorAll('.modal').forEach(m=>
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')})
+);
 
-function fKES(n){
-  if(isNaN(+n))return '0.00';
-  return (+n).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-function fDate(d){
-  if(!d)return '-';
-  const dt=d?.toDate?d.toDate():new Date(d);
-  return dt.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'});
-}
-function esc(s){
-  if(!s)return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function stopAll(){listeners.forEach(u=>u&&u());listeners=[];}
-
+// ─── Tab helpers ──────────────────────────────────────────────
 function aTab(tab,btn){
   document.querySelectorAll('#adminPanel .tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#adminPanel .tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  const p=G(`a-${tab}`); if(p)p.classList.add('active');
-  if(tab==='shops')loadAdminShops();
-  if(tab==='overview')initAdmin();
+  const p=G(`a-${tab}`); if(p) p.classList.add('active');
+  if(tab==='shops') loadAdminShops();
+  if(tab==='overview') initAdmin();
 }
-
 function sTab(tab,btn){
   document.querySelectorAll('#shopPanel .tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#shopPanel .tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  const p=G(`s-${tab}`); if(p)p.classList.add('active');
-  if(tab==='profit')renderProfit();
+  const p=G(`s-${tab}`); if(p) p.classList.add('active');
+  if(tab==='profit') renderProfit();
 }
 
-// ═══════════════════════════════════════════════
+// ─── Online/offline pill ─────────────────────────────────────
+function updateNetPill(){
+  const pill=G('offlinePill');
+  navigator.onLine ? pill.classList.remove('show') : pill.classList.add('show');
+}
+window.addEventListener('online', ()=>{updateNetPill();toast('🌐 Back online — syncing…');});
+window.addEventListener('offline',()=>{updateNetPill();toast('📴 Offline — data cached');});
+updateNetPill();
+
+// ═══════════════════════════════════════════════════════════════
 // ADMIN
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function initAdmin(){
   const cont=G('adminOverview');
   const u=db.collection('shops').onSnapshot(async snap=>{
-    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered yet</p><small>Use Register Shop to add the first shop</small></div>';return;}
+    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered yet</p></div>';return;}
     const rows=await Promise.all(snap.docs.map(async doc=>{
       const s=doc.data(),id=doc.id;
-      const [sl,ex,db2]=await Promise.all([
+      const[sl,ex,db2]=await Promise.all([
         db.collection(`shops/${id}/sales`).get(),
         db.collection(`shops/${id}/expenses`).get(),
         db.collection(`shops/${id}/debtors`).where('status','==','active').get()
@@ -1010,18 +959,17 @@ function initAdmin(){
       sl.forEach(d=>{ts+=d.data().totalSellingPrice||0;tc+=d.data().totalBuyingPrice||0;});
       ex.forEach(d=>{te+=d.data().amount||0;});
       db2.forEach(d=>{tu+=d.data().amount||0;});
-      const profit=ts-(tc+te);
-      return{s,profit,ts,te,tu};
+      return{s,profit:ts-(tc+te),ts,te,tu};
     }));
     cont.innerHTML=rows.map(({s,profit,ts,te,tu})=>`
       <div class="shop-perf">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div>
-            <div style="font-size:15px;font-weight:800">${esc(s.name||'Unnamed Shop')}</div>
+            <div style="font-size:15px;font-weight:800">${esc(s.name||'Unnamed')}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px">📍 ${esc(s.location||'N/A')} &nbsp;|&nbsp; 👤 ${esc(s.shopkeeperName||'')}</div>
             <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')}</div>
           </div>
-          <span class="badge b-accent">${s.shopkeeperEmail?.split('@')[0]||''}</span>
+          <span class="badge b-accent">${esc(s.shopkeeperEmail?.split('@')[0]||'')}</span>
         </div>
         <div class="perf-grid">
           <div class="perf-cell"><div class="cv" style="color:var(--green)">KES ${fKES(ts)}</div><div class="ck">Sales</div></div>
@@ -1030,7 +978,7 @@ function initAdmin(){
         </div>
         ${tu>0?`<div class="alert alert-yellow" style="margin-top:8px;margin-bottom:0">⚠️ Unpaid debts: <b>KES ${fKES(tu)}</b></div>`:''}
       </div>`).join('');
-  });
+  },err=>cont.innerHTML=`<div class="alert alert-yellow">Admin data unavailable offline</div>`);
   listeners.push(u);
 }
 
@@ -1049,8 +997,7 @@ function loadAdminShops(){
             <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')} &nbsp;|&nbsp; 📱 +254${esc(s.shopkeeperPhone||'')}</div>
           </div>
           <button onclick="adminDelShop('${doc.id}','${esc(s.name)}')" class="btn btn-ghost btn-xs" style="color:var(--red);border-color:rgba(248,113,113,.3)">🗑️ Del</button>
-        </div>
-      </div>`;
+        </div></div>`;
     }).join('');
   });
   listeners.push(u);
@@ -1061,19 +1008,19 @@ async function regShop(){
   const ph=getV('r_ph').trim(),em=getV('r_em').trim().toLowerCase();
   hideErr('regErr'); G('regOk').style.display='none';
   if(!name||!loc||!kn||!ph||!em){showErr('regErr','All fields are required');return;}
-  if(!em.endsWith('@gmail.com')){showErr('regErr','Email must be a Gmail address (@gmail.com)');return;}
-  const ex=await findShop(em);
-  if(ex){showErr('regErr','This Gmail is already registered to another shop');return;}
+  if(!em.endsWith('@gmail.com')){showErr('regErr','Email must be a Gmail address');return;}
   try{
+    const ex=await findShop(em);
+    if(ex){showErr('regErr','This Gmail is already registered');return;}
     await db.collection('shops').add({name,location:loc,shopkeeperName:kn,shopkeeperPhone:ph,shopkeeperEmail:em,createdAt:TS()});
-    showOk('regOk',`✅ "${name}" registered! ${kn} can now sign in with ${em}`);
+    showOk('regOk',`✅ "${name}" registered! ${kn} can sign in with ${em}`);
     ['r_n','r_l','r_kn','r_ph','r_em'].forEach(id=>G(id).value='');
     toast('Shop registered!');
   }catch(e){showErr('regErr',e.message);}
 }
 
 function adminDelShop(id,name){
-  confirm2(`Delete "${name}"?`,'All shop data (products, sales, debtors, expenses) will be permanently deleted!',async()=>{
+  confirm2(`Delete "${name}"?`,'All shop data will be permanently deleted.',async()=>{
     try{
       for(const col of['products','sales','debtors','expenses']){
         const s=await db.collection(`shops/${id}/${col}`).get();
@@ -1085,9 +1032,9 @@ function adminDelShop(id,name){
   });
 }
 
-// ═══════════════════════════════════════════════
-// SHOP INIT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SHOP INIT + LISTENERS
+// ═══════════════════════════════════════════════════════════════
 function initShop(){
   setTxt('sh_name',cShop.name||'My Shop');
   setTxt('sh_loc',cShop.location||'');
@@ -1100,52 +1047,54 @@ function initShop(){
 function startListeners(){
   stopAll();
 
-  // Firestore onSnapshot works offline automatically when persistence is enabled.
-  // includeMetadataChanges lets us know when data is from cache vs server.
-  const snapOpts = {includeMetadataChanges: true};
-
-  const onErr = col => err => {
-    console.warn(`Listener error [${col}]:`, err.message);
-    // On offline error, try loading once from cache
-    db.collection(`shops/${cShopId}/${col}`).get({source:'cache'}).then(snap=>{
-      if(col==='products'){ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));renderStock();updateProdDrop();}
-      if(col==='sales'){ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));renderRecentSales();renderSalesSummary();}
-      if(col==='debtors'){ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));renderDebtors();}
-      if(col==='expenses'){ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExp();}
-      refreshDash();
-    }).catch(()=>{});
-  };
+  // onSnapshot automatically serves from Firestore's IndexedDB cache when offline.
+  // The error handler falls back to an explicit {source:'cache'} read as a safety net.
+  function mkErr(col){
+    return err=>{
+      console.warn(`Listener [${col}] error:`, err.message);
+      db.collection(`shops/${cShopId}/${col}`)
+        .get({source:'cache'})
+        .then(snap=>{
+          const docs=snap.docs.map(d=>({id:d.id,...d.data()}));
+          if(col==='products'){ld.products=docs;renderStock();updateProdDrop();}
+          if(col==='sales'){ld.sales=docs;renderRecentSales();renderSalesSummary();}
+          if(col==='debtors'){ld.debtors=docs;renderDebtors();}
+          if(col==='expenses'){ld.expenses=docs;renderExp();}
+          refreshDash();
+        }).catch(()=>{});
+    };
+  }
 
   const u1=db.collection(`shops/${cShopId}/products`).orderBy('addedAt','desc')
-    .onSnapshot(snapOpts, snap=>{
+    .onSnapshot({includeMetadataChanges:false},snap=>{
       ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderStock();updateProdDrop();refreshDash();
-    }, onErr('products'));
+    },mkErr('products'));
 
   const u2=db.collection(`shops/${cShopId}/sales`).orderBy('date','desc').limit(200)
-    .onSnapshot(snapOpts, snap=>{
+    .onSnapshot({includeMetadataChanges:false},snap=>{
       ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderRecentSales();renderSalesSummary();refreshDash();
-    }, onErr('sales'));
+    },mkErr('sales'));
 
   const u3=db.collection(`shops/${cShopId}/debtors`).orderBy('createdAt','desc')
-    .onSnapshot(snapOpts, snap=>{
+    .onSnapshot({includeMetadataChanges:false},snap=>{
       ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderDebtors();refreshDash();
-    }, onErr('debtors'));
+    },mkErr('debtors'));
 
   const u4=db.collection(`shops/${cShopId}/expenses`).orderBy('date','desc')
-    .onSnapshot(snapOpts, snap=>{
+    .onSnapshot({includeMetadataChanges:false},snap=>{
       ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderExp();refreshDash();
-    }, onErr('expenses'));
+    },mkErr('expenses'));
 
   listeners.push(u1,u2,u3,u4);
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // DASHBOARD
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function refreshDash(){
   const stockVal=ld.products.reduce((s,p)=>s+(p.quantity||0)*(p.sellingPrice||0),0);
   const totSales=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
@@ -1155,38 +1104,31 @@ function refreshDash(){
   const cogs=ld.sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
   const profit=totSales-(cogs+totExp);
   const snail=snailCount();
-
   setTxt('d_stkVal',`KES ${fKES(stockVal)}`);
   setTxt('d_sales',`KES ${fKES(totSales)}`);
   setTxt('d_debts',`KES ${fKES(unpaid)}`);
-  const pe=G('d_profit'); pe.textContent=`KES ${fKES(profit)}`;
-  pe.style.color=profit>=0?'var(--green)':'var(--red)';
+  const pe=G('d_profit'); pe.textContent=`KES ${fKES(profit)}`; pe.style.color=profit>=0?'var(--green)':'var(--red)';
   setTxt('d_pCount',ld.products.length);
   setTxt('d_dCount',active.length);
   setTxt('d_snailC',snail);
   setTxt('d_expTotal',`KES ${fKES(totExp)}`);
-
   let alerts='';
-  if(snail>0) alerts+=`<div class="alert alert-yellow">🐌 <b>${snail} product(s)</b> selling very slowly (≤ 1 unit in last 14 days)</div>`;
+  if(snail>0) alerts+=`<div class="alert alert-yellow">🐌 <b>${snail} product(s)</b> selling very slowly (≤1 unit in 14 days)</div>`;
   if(unpaid>0) alerts+=`<div class="alert alert-red">⚠️ <b>KES ${fKES(unpaid)}</b> in unpaid debts from ${active.length} debtor(s)</div>`;
-  if(profit<0) alerts+=`<div class="alert alert-red">📉 Running at a loss of <b>KES ${fKES(Math.abs(profit))}</b> — review expenses & pricing</div>`;
+  if(profit<0) alerts+=`<div class="alert alert-red">📉 Running at a loss of <b>KES ${fKES(Math.abs(profit))}</b></div>`;
   if(profit>0&&unpaid===0) alerts+=`<div class="alert alert-green">📈 Profitable! Net profit: <b>KES ${fKES(profit)}</b></div>`;
   G('dashAlerts').innerHTML=alerts;
 }
-
 function snailCount(){
   const twa=new Date(); twa.setDate(twa.getDate()-14);
   const sp={};
-  ld.sales.forEach(s=>{
-    const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);
-    if(d>=twa) sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);
-  });
+  ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
   return ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1).length;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // STOCK
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function renderStock(){
   const c=G('stockContent');
   if(!ld.products.length){c.innerHTML='<div class="empty"><div class="ico">📦</div><p>No products in stock</p><small>Add your first product above</small></div>';return;}
@@ -1219,7 +1161,6 @@ function renderStock(){
     </div>`;
   }).join('');
 }
-
 function addProd(){
   const n=getV('p_n').trim(),b=parseFloat(getV('p_b')),s=parseFloat(getV('p_s')),q=parseInt(getV('p_q'));
   hideErr('prodErr');
@@ -1229,17 +1170,15 @@ function addProd(){
     .then(()=>{closeModal('mAddProd');toast(`"${n}" added!`);['p_n','p_b','p_s','p_q'].forEach(id=>G(id).value='');})
     .catch(e=>showErr('prodErr',e.message));
 }
-
 function editQty(id,name,cur){
   const nv=prompt(`Update quantity for "${name}":`,cur);
-  if(nv===null)return;
+  if(nv===null) return;
   const q=parseInt(nv);
   if(isNaN(q)||q<0){toast('Invalid quantity');return;}
   db.collection(`shops/${cShopId}/products`).doc(id).update({quantity:q})
     .then(()=>toast('Quantity updated ✓'))
     .catch(e=>toast('Error: '+e.message));
 }
-
 function delProd(id,name){
   confirm2(`Delete "${name}"?`,'This product will be removed from stock.',()=>{
     db.collection(`shops/${cShopId}/products`).doc(id).delete()
@@ -1248,54 +1187,47 @@ function delProd(id,name){
   });
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // SALES
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function setSaleMode(m){
   saleMode=m;
   G('btnCash').className=`type-btn cash${m==='cash'?' sel':''}`;
   G('btnDebt').className=`type-btn debt${m==='debt'?' sel':''}`;
   G('debtFields').style.display=m==='debt'?'block':'none';
 }
-
 function updateProdDrop(){
   const sel=G('s_prod'),prev=sel.value;
   sel.innerHTML='<option value="">— Select product —</option>';
   ld.products.filter(p=>(p.quantity||0)>0).forEach(p=>{
     const o=document.createElement('option');
-    o.value=p.id;
-    o.textContent=`${p.name}  (Qty: ${p.quantity} | KES ${fKES(p.sellingPrice)})`;
-    o.dataset.sell=p.sellingPrice;o.dataset.buy=p.buyingPrice;
-    o.dataset.qty=p.quantity;o.dataset.name=p.name;
+    o.value=p.id; o.textContent=`${p.name}  (Qty: ${p.quantity} | KES ${fKES(p.sellingPrice)})`;
+    o.dataset.sell=p.sellingPrice; o.dataset.buy=p.buyingPrice;
+    o.dataset.qty=p.quantity; o.dataset.name=p.name;
     sel.appendChild(o);
   });
-  if(prev)sel.value=prev;
+  if(prev) sel.value=prev;
   calcAmt();
 }
-
 function onProdChange(){calcAmt();}
-
 function calcAmt(){
   const sel=G('s_prod'),q=parseInt(getV('s_qty'))||0;
   const opt=sel.options[sel.selectedIndex];
-  if(sel.value&&q>0&&opt.dataset.sell){
-    G('s_amt').value=`KES ${fKES(parseFloat(opt.dataset.sell)*q)}`;
-  } else {G('s_amt').value='';}
+  G('s_amt').value=(sel.value&&q>0&&opt.dataset.sell)?`KES ${fKES(parseFloat(opt.dataset.sell)*q)}`:'';
 }
-
 async function recordSale(){
   const sel=G('s_prod'),q=parseInt(getV('s_qty'));
   hideErr('saleErr');
   if(!sel.value||isNaN(q)||q<=0){showErr('saleErr','Select a product and enter valid quantity');return;}
   const opt=sel.options[sel.selectedIndex];
   const avail=parseInt(opt.dataset.qty);
-  if(q>avail){showErr('saleErr',`Only ${avail} units available in stock`);return;}
+  if(q>avail){showErr('saleErr',`Only ${avail} units available`);return;}
   const pId=sel.value,pName=opt.dataset.name;
   const sp=parseFloat(opt.dataset.sell),bp=parseFloat(opt.dataset.buy);
   const isDebt=saleMode==='debt';
   if(isDebt){
     const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
-    if(!dn||!dp){showErr('saleErr','Enter debtor name and phone number');return;}
+    if(!dn||!dp){showErr('saleErr','Enter debtor name and phone');return;}
     if(dp.length<9){showErr('saleErr','Phone must be 9 digits after +254');return;}
   }
   try{
@@ -1308,7 +1240,7 @@ async function recordSale(){
     if(isDebt){
       const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
       const phone=`+254${dp}`;
-      const msg=buildMsg(dn,pName,q,totS,cShop.name);
+      const msg=buildDebtMsg(dn,pName,q,totS,cShop.name);
       await db.collection(`shops/${cShopId}/debtors`).add({debtorName:dn,phone,productId:pId,productName:pName,quantity:q,amount:totS,status:'active',createdAt:TS(),paidAt:null,claimMessage:msg,shopName:cShop.name});
     }
     sel.value='';G('s_qty').value='';G('s_amt').value='';
@@ -1317,11 +1249,9 @@ async function recordSale(){
     toast(isDebt?'📝 Debt sale recorded':'✅ Sale recorded!');
   }catch(e){showErr('saleErr',e.message);}
 }
-
-function buildMsg(name,product,qty,amount,shopName){
-  return `Dear ${name}, this is a friendly reminder from ${shopName} that you have an outstanding balance of KES ${fKES(amount)} for ${qty} unit(s) of ${product} purchased on credit. Kindly settle your account at your earliest convenience. Thank you for your business. — ${shopName}`;
+function buildDebtMsg(name,product,qty,amount,shopName){
+  return `Dear ${name}, this is a friendly reminder from ${shopName} that you have an outstanding balance of KES ${fKES(amount)} for ${qty} unit(s) of ${product} purchased on credit. Kindly settle at your earliest convenience. Thank you. — ${shopName}`;
 }
-
 function renderRecentSales(){
   const c=G('recentSales');
   if(!ld.sales.length){c.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No sales yet</p>';return;}
@@ -1336,7 +1266,6 @@ function renderRecentSales(){
       <div class="mono" style="font-weight:800;color:var(--green);font-size:13px">KES ${fKES(s.totalSellingPrice)}</div>
     </div>`).join('');
 }
-
 function renderSalesSummary(){
   const c=G('salesSumContent');
   const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
@@ -1349,20 +1278,19 @@ function renderSalesSummary(){
     <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Cash Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(cashS)}</span></div>
     <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Debt Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(debtS)}</span></div>`;
   if(unpaidD>0) html+=`<div class="alert alert-red" style="margin-top:8px;margin-bottom:0;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaidD)}</b></div>`;
-  if(paidD>0) html+=`<div class="alert alert-green" style="margin-top:4px;margin-bottom:0;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidD)}</b></div>`;
+  if(paidD>0)   html+=`<div class="alert alert-green" style="margin-top:4px;margin-bottom:0;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidD)}</b></div>`;
   c.innerHTML=html;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // DEBTORS
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function renderDebtors(){
   const c=G('debtorsContent');
   const active=ld.debtors.filter(d=>d.status==='active');
   const paid=ld.debtors.filter(d=>d.status==='paid');
-  const totU=active.reduce((s,d)=>s+(d.amount||0),0);
-  setTxt('totalUnpaid',`KES ${fKES(totU)}`);
-  if(!ld.debtors.length){c.innerHTML='<div class="empty"><div class="ico">✅</div><p>No debtors!</p><small>All accounts are clear</small></div>';return;}
+  setTxt('totalUnpaid',`KES ${fKES(active.reduce((s,d)=>s+(d.amount||0),0))}`);
+  if(!ld.debtors.length){c.innerHTML='<div class="empty"><div class="ico">✅</div><p>No debtors!</p><small>All accounts clear</small></div>';return;}
   let html='';
   if(active.length){
     html+=`<div class="sec-hdr">Active Debts (${active.length})</div>`;
@@ -1408,7 +1336,6 @@ function renderDebtors(){
   }
   c.innerHTML=html;
 }
-
 function payDebt(id,amount,name){
   confirm2('Mark as Paid',`Record payment of KES ${fKES(amount)} from ${name}?`,()=>{
     db.collection(`shops/${cShopId}/debtors`).doc(id).update({status:'paid',paidAt:TS()})
@@ -1416,7 +1343,6 @@ function payDebt(id,amount,name){
       .catch(e=>toast('Error: '+e.message));
   });
 }
-
 function delDebt(id,name){
   confirm2('Delete Debtor',`Remove ${name} from debtors list?`,()=>{
     db.collection(`shops/${cShopId}/debtors`).doc(id).delete()
@@ -1424,19 +1350,13 @@ function delDebt(id,name){
       .catch(e=>toast('Error: '+e.message));
   });
 }
+function sendWA(phone,msgEnc){window.open(`https://wa.me/${phone.replace('+','')}?text=${msgEnc}`,'_blank');}
+function sendSMS(phone,msgEnc){window.location.href=`sms:${phone}?body=${msgEnc}`;}
 
-function sendWA(phone,msgEnc){
-  window.open(`https://wa.me/${phone.replace('+','')}?text=${msgEnc}`,'_blank');
-}
-function sendSMS(phone,msgEnc){
-  window.location.href=`sms:${phone}?body=${msgEnc}`;
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // EXPENSES
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function onExpCat(){G('e_otherF').style.display=getV('e_cat')==='other'?'block':'none';}
-
 function addExp(){
   const cat=getV('e_cat'),amt=parseFloat(getV('e_amt')),date=getV('e_date'),other=getV('e_other').trim();
   hideErr('expErr');
@@ -1448,7 +1368,6 @@ function addExp(){
     .then(()=>{closeModal('mAddExp');toast('Expense added!');G('e_amt').value='';G('e_other').value='';})
     .catch(e=>showErr('expErr',e.message));
 }
-
 function renderExp(){
   const c=G('expContent');
   const tot=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
@@ -1467,18 +1386,17 @@ function renderExp(){
       </div>
     </div>`).join('');
 }
-
 function delExp(id){
-  confirm2('Delete Expense','Remove this expense record?',()=>{
+  confirm2('Delete Expense','Remove this expense?',()=>{
     db.collection(`shops/${cShopId}/expenses`).doc(id).delete()
       .then(()=>toast('Expense deleted'))
       .catch(e=>toast('Error: '+e.message));
   });
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // PROFIT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function renderProfit(){
   const c=G('profitContent');
   const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
@@ -1492,84 +1410,58 @@ function renderProfit(){
   const paidAmt=paid.reduce((s,d)=>s+(d.amount||0),0);
   const expByCat={};
   ld.expenses.forEach(e=>{expByCat[e.description]=(expByCat[e.description]||0)+e.amount;});
-  // Snailing products
   const twa=new Date();twa.setDate(twa.getDate()-14);
   const sp={};
   ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
   const snailProds=ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1);
-
   c.innerHTML=`
-    <!-- Profit Big -->
     <div class="profit-big">
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">${esc(cShop?.name||'')} — Net Profit</div>
       <div class="num" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</div>
       <div style="font-size:12px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'📈 Shop is profitable':'📉 Running at a loss'}</div>
     </div>
-
-    <!-- SALES -->
     <div class="card" style="margin-bottom:10px">
       <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➕ SALES</div>
       <div class="formula-row"><span style="color:var(--text2)">Total Revenue (Cash + Debt)</span><span class="mono" style="font-weight:800;color:var(--green)">KES ${fKES(totS)}</span></div>
       ${unpaid>0?`<div class="alert alert-red" style="margin-top:8px;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaid)}</b></div>`:''}
-      ${paidAmt>0?`<div class="alert alert-green" style="margin-top:4px;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidAmt)}</b></div>`:''}
+      ${paidAmt>0?`<div class="alert alert-green" style="margin-top:4px;font-size:11px">✅ Paid debt(s) of <b>KES ${fKES(paidAmt)}</b></div>`:''}
     </div>
-
-    <!-- COGS -->
     <div class="card" style="margin-bottom:10px">
-      <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ MONEY IN SOLD STOCK (Cost of Goods Sold)</div>
+      <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ COST OF GOODS SOLD</div>
       <div class="formula-row"><span style="color:var(--text2)">Buying cost of all sold items</span><span class="mono" style="font-weight:800;color:var(--red)">KES ${fKES(cogs)}</span></div>
     </div>
-
-    <!-- EXPENSES -->
     <div class="card" style="margin-bottom:10px">
       <div style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ EXPENSES</div>
-      ${Object.entries(expByCat).map(([k,v])=>`<div class="formula-row"><span style="color:var(--text2)">${esc(k)}</span><span class="mono" style="color:var(--purple)">KES ${fKES(v)}</span></div>`).join('')}
+      ${Object.entries(expByCat).map(([k,v])=>`<div class="formula-row"><span style="color:var(--text2)">${esc(k)}</span><span class="mono" style="color:var(--purple)">KES ${fKES(v)}</span></div>`).join('')||'<div style="color:var(--text3);font-size:12px">No expenses recorded</div>'}
       <div class="formula-row total"><span style="font-weight:800">Total Expenses</span><span class="mono" style="font-weight:800;color:var(--purple)">KES ${fKES(totE)}</span></div>
     </div>
-
-    <!-- FORMULA -->
     <div class="card" style="margin-bottom:10px;background:rgba(56,189,248,.03);border-color:rgba(56,189,248,.15)">
       <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📐 PROFIT CALCULATION</div>
       <div style="font-family:'Space Mono',monospace;font-size:12px">
         <div class="formula-row"><span>SALES</span><span style="color:var(--green)">KES ${fKES(totS)}</span></div>
         <div class="formula-row"><span>− Cost of Goods Sold</span><span style="color:var(--red)">KES ${fKES(cogs)}</span></div>
         <div class="formula-row"><span>− Expenses</span><span style="color:var(--purple)">KES ${fKES(totE)}</span></div>
-        <div class="formula-row total">
-          <span style="font-size:14px">= NET PROFIT</span>
-          <span style="font-size:18px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</span>
-        </div>
+        <div class="formula-row total"><span style="font-size:14px">= NET PROFIT</span><span style="font-size:18px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</span></div>
       </div>
     </div>
-
-    <!-- CURRENT STOCK VALUE -->
     <div class="card" style="margin-bottom:10px">
       <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 MONEY IN CURRENT STOCK</div>
       <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Value of remaining inventory at selling price</div>
       <div class="mono" style="font-size:24px;font-weight:800;color:var(--accent)">KES ${fKES(stkVal)}</div>
     </div>
-
-    <!-- SNAILING STOCK -->
     ${snailProds.length?`
     <div class="card" style="margin-bottom:10px;border-left:3px solid var(--yellow);background:rgba(251,191,36,.04)">
       <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🐌 SNAILING STOCK</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Products with ≤ 1 unit sold in last 14 days</div>
-      ${snailProds.map(p=>`
-        <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(51,65,85,.3)">
-          <span style="color:var(--text2)">${esc(p.name)}</span>
-          <span style="color:var(--yellow)">Qty: ${p.quantity} (Sold: ${sp[p.id]||0})</span>
-        </div>`).join('')}
-    </div>`:`
-    <div class="alert alert-green" style="margin-bottom:10px">✅ No snailing stock — all products moving well</div>`}
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Products with ≤1 unit sold in last 14 days</div>
+      ${snailProds.map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(51,65,85,.3)"><span style="color:var(--text2)">${esc(p.name)}</span><span style="color:var(--yellow)">Qty:${p.quantity} (Sold:${sp[p.id]||0})</span></div>`).join('')}
+    </div>`:`<div class="alert alert-green" style="margin-bottom:10px">✅ No snailing stock — all products moving well</div>`}
   `;
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // SETTINGS
-// ═══════════════════════════════════════════════
-function openSettings(){
-  G('st_n').value=cShop?.name||''; G('st_l').value=cShop?.location||'';
-  openModal('mSettings');
-}
+// ═══════════════════════════════════════════════════════════════
+function openSettings(){G('st_n').value=cShop?.name||'';G('st_l').value=cShop?.location||'';openModal('mSettings');}
 function saveSettings(){
   const n=getV('st_n').trim(),l=getV('st_l').trim();
   if(!n){toast('Shop name required');return;}
@@ -1577,23 +1469,21 @@ function saveSettings(){
     .then(()=>{
       cShop.name=n;cShop.location=l;
       setTxt('sh_name',n);setTxt('sh_loc',l);setTxt('d_sName',n);
-      // Keep session cache in sync
-      if(cUser) saveSession('shop', cUser, cShopId, cShop);
+      if(cUser) saveSession('shop',cUser,cShopId,cShop);
       closeModal('mSettings');toast('Settings saved!');
     })
     .catch(e=>toast('Error: '+e.message));
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // AUDIT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 function onAuditChange(){
   const t=getV('auditType');
   G('auditDayF').style.display=t==='day'?'block':'none';
   G('auditWeekF').style.display=t==='week'?'block':'none';
   G('auditMonthF').style.display=t==='month'?'block':'none';
 }
-
 async function genAudit(){
   const t=getV('auditType');
   const now=new Date();let start,end,label;
@@ -1614,7 +1504,7 @@ async function genAudit(){
     const v=getV('auditDay');if(!v){toast('Select a date');return;}
     start=new Date(v+'T00:00:00');end=new Date(v+'T23:59:59');label=fDate(start);
   }else if(t==='week'){
-    const v=getV('auditWkStart');if(!v){toast('Select week start date');return;}
+    const v=getV('auditWkStart');if(!v){toast('Select week start');return;}
     start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
     label=`Week of ${fDate(start)}`;
   }else if(t==='month'){
@@ -1623,7 +1513,7 @@ async function genAudit(){
     start=new Date(+yr,+mo-1,1);end=new Date(+yr,+mo,0,23,59,59,999);
     label=start.toLocaleString('en-KE',{month:'long',year:'numeric'});
   }
-  toast('Generating report...');
+  toast('Generating report…');
   try{
     const sTS=firebase.firestore.Timestamp.fromDate(start);
     const eTS=firebase.firestore.Timestamp.fromDate(end);
@@ -1644,14 +1534,12 @@ async function genAudit(){
     const unpaidD=debtors.filter(d=>d.status==='active').reduce((s,d)=>s+(d.amount||0),0);
     auditData={label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD,sDate,eDate,sTS,eTS};
     showAudit();
-  }catch(e){toast('Error: '+e.message);console.error(e);}
+  }catch(e){toast('Error: '+e.message);}
 }
-
 function showAudit(){
   const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
   const sn=cShop?.name||'Shop';
-  const c=G('auditOutput');
-  c.style.display='block';
+  const c=G('auditOutput'); c.style.display='block';
   c.innerHTML=`
     <div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px">
       <div style="font-size:16px;font-weight:800">${esc(sn)}</div>
@@ -1665,36 +1553,28 @@ function showAudit(){
       <div class="stat${profit>=0?' green':' red'}"><div class="lbl">Profit</div><div class="val" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:14px">${profit>=0?'+':''}KES ${fKES(profit)}</div></div>
     </div>
     ${unpaidD>0?`<div class="alert alert-red" style="margin-bottom:12px">⚠️ Includes unpaid debts of <b>KES ${fKES(unpaidD)}</b></div>`:''}
-    <!-- Sales -->
     <div class="card" style="margin-bottom:10px;overflow-x:auto">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">SALES (${sales.length})</div>
-      ${sales.length?`<table class="tbl"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>Type</th></tr></thead>
-      <tbody>${sales.map(s=>`<tr><td>${esc(s.productName)}</td><td>${s.quantity}</td><td>KES ${fKES(s.totalSellingPrice)}</td><td>${s.isDebt?'⚠️ Debt':'✅ Cash'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No sales in this period</p>'}
+      ${sales.length?`<table class="tbl"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>Type</th></tr></thead><tbody>${sales.map(s=>`<tr><td>${esc(s.productName)}</td><td>${s.quantity}</td><td>KES ${fKES(s.totalSellingPrice)}</td><td>${s.isDebt?'⚠️ Debt':'✅ Cash'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No sales in this period</p>'}
     </div>
-    <!-- Expenses -->
     <div class="card" style="margin-bottom:10px;overflow-x:auto">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">EXPENSES (${expenses.length})</div>
-      ${expenses.length?`<table class="tbl"><thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead>
-      <tbody>${expenses.map(e=>`<tr><td>${esc(e.description)}</td><td>${e.date}</td><td>KES ${fKES(e.amount)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No expenses in this period</p>'}
+      ${expenses.length?`<table class="tbl"><thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead><tbody>${expenses.map(e=>`<tr><td>${esc(e.description)}</td><td>${e.date}</td><td>KES ${fKES(e.amount)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No expenses</p>'}
     </div>
-    <!-- Debtors -->
     <div class="card" style="margin-bottom:12px;overflow-x:auto">
       <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">DEBTORS (${debtors.length})</div>
-      ${debtors.length?`<table class="tbl"><thead><tr><th>Name</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead>
-      <tbody>${debtors.map(d=>`<tr><td>${esc(d.debtorName||'')}</td><td>${esc(d.productName)}</td><td>KES ${fKES(d.amount)}</td><td>${d.status==='paid'?'✅ Paid':'⚠️ Unpaid'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No new debtors in this period</p>'}
+      ${debtors.length?`<table class="tbl"><thead><tr><th>Name</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead><tbody>${debtors.map(d=>`<tr><td>${esc(d.debtorName||'')}</td><td>${esc(d.productName)}</td><td>KES ${fKES(d.amount)}</td><td>${d.status==='paid'?'✅ Paid':'⚠️ Unpaid'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No new debtors</p>'}
     </div>
     <button onclick="dlPDF()" class="btn btn-accent" style="width:100%;padding:13px;font-size:15px;margin-bottom:8px">📥 Download PDF Report</button>
   `;
   c.scrollIntoView({behavior:'smooth'});
 }
-
 function dlPDF(){
   if(!auditData){toast('Generate a report first');return;}
   const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
   const sn=cShop?.name||'Shop';
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
-  // Header
   doc.setFillColor(15,23,42);doc.rect(0,0,210,30,'F');
   doc.setFillColor(30,58,138);doc.rect(0,0,210,2,'F');
   doc.setTextColor(241,245,249);doc.setFontSize(17);doc.setFont('helvetica','bold');
@@ -1709,10 +1589,7 @@ function dlPDF(){
   const rows=[['Total Sales:',`KES ${fKES(tS)}`],['Cost of Goods Sold:',`KES ${fKES(tC)}`],['Total Expenses:',`KES ${fKES(tE)}`],['NET PROFIT:',`KES ${fKES(profit)}`]];
   if(unpaidD>0)rows.push(['Unpaid Debts:',`KES ${fKES(unpaidD)}`]);
   doc.setFontSize(10);
-  rows.forEach(([l,v])=>{
-    doc.setFont('helvetica',l.startsWith('NET')?'bold':'normal');
-    doc.text(l,14,y);doc.text(v,196,y,{align:'right'});y+=7;
-  });
+  rows.forEach(([l,v])=>{doc.setFont('helvetica',l.startsWith('NET')?'bold':'normal');doc.text(l,14,y);doc.text(v,196,y,{align:'right'});y+=7;});
   y+=5;
   if(sales.length){
     doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('SALES',14,y);y+=3;
@@ -1737,10 +1614,9 @@ function dlPDF(){
   doc.save(`${sn.replace(/\s+/g,'_')}_Audit_${label.replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
   toast('PDF downloaded! 📄');
 }
-
 async function delAuditRecs(){
   const t=getV('auditType');
-  if(!['day','week'].includes(t)){toast('Delete only available for Specific Day or Specific Week');return;}
+  if(!['day','week'].includes(t)){toast('Delete only for Specific Day or Specific Week');return;}
   let start,end,label;
   if(t==='day'){
     const v=getV('auditDay');if(!v){toast('Select a date');return;}
@@ -1750,9 +1626,9 @@ async function delAuditRecs(){
     start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
     label=`Week of ${fDate(start)}`;
   }
-  confirm2(`Delete Records: ${label}`,'All sales, expenses and debtor records for this period will be permanently deleted. This cannot be undone!',async()=>{
+  confirm2(`Delete Records: ${label}`,'All sales, expenses and debtors for this period will be permanently deleted!',async()=>{
     try{
-      toast('Deleting...');
+      toast('Deleting…');
       const sTS=firebase.firestore.Timestamp.fromDate(start);
       const eTS=firebase.firestore.Timestamp.fromDate(end);
       const sDate=start.toISOString().split('T')[0];
@@ -1773,168 +1649,35 @@ async function delAuditRecs(){
   });
 }
 
-// ═══════════════════════════════════════════════
-// PWA SERVICE WORKER — caches the page itself
-// ═══════════════════════════════════════════════
-if('serviceWorker' in navigator){
-  const CACHE = 'shopmaster-v3';
-  // PAGE_URL is the actual URL of this HTML file — passed into the SW
-  // so it can cache and serve itself on offline refresh.
-  const PAGE_URL = location.href.split('?')[0].split('#')[0];
-
-  const SHELL = [
-    PAGE_URL,   // ← THE KEY FIX: cache the HTML page itself
-    'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
-  ];
-
-  const sw = `
-const CACHE = '${CACHE}';
-const PAGE_URL = ${JSON.stringify(PAGE_URL)};
-const SHELL = ${JSON.stringify(SHELL)};
-const SKIP_HOSTS = [
-  'firestore.googleapis.com','firebase.googleapis.com',
-  'identitytoolkit.googleapis.com','securetoken.googleapis.com',
-  'accounts.google.com','googleapis.com'
-];
-
-// INSTALL: fetch and store every shell resource, including the page HTML
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache =>
-      Promise.allSettled(
-        SHELL.map(url =>
-          fetch(url, {cache:'reload'}).then(r => {
-            if(r && r.ok) cache.put(url, r);
-          }).catch(() => {})
-        )
-      )
-    ).then(() => self.skipWaiting())
-  );
-});
-
-// ACTIVATE: remove old caches
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-// FETCH: navigation requests (page refresh) → serve cached HTML
-//        all other GETs → cache-first, update in background
-self.addEventListener('fetch', e => {
-  if(e.request.method !== 'GET') return;
-
-  const url = new URL(e.request.url);
-
-  // Let Firebase/Google API calls go straight to network (Firestore handles its own offline)
-  if(SKIP_HOSTS.some(h => url.hostname.endsWith(h))) return;
-
-  // Navigation request = someone loading/refreshing the page
-  if(e.request.mode === 'navigate') {
-    e.respondWith(
-      caches.match(PAGE_URL).then(cached => {
-        if(cached) return cached;
-        return fetch(e.request).catch(() =>
-          new Response('<h2 style="font-family:sans-serif;padding:2rem">ShopMaster is loading, please wait a moment and refresh.</h2>',
-            {headers:{'Content-Type':'text/html'}})
-        );
-      })
-    );
-    return;
-  }
-
-  // All other GET requests: cache-first, background update
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const network = fetch(e.request).then(r => {
-        if(r && r.ok && r.type !== 'opaque') {
-          const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return r;
-      }).catch(() => null);
-      return cached || network.then(r => r || new Response('', {status: 503}));
-    })
-  );
-});
-`;
-
-  try {
-    const swBlob = new Blob([sw], {type: 'application/javascript'});
-    const swURL  = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swURL, {scope: './'})
-      .then(reg => {
-        // After SW is active, make sure the page itself is cached right now
-        // (handles the case where this is the very first load)
-        reg.addEventListener('updatefound', () => {
-          const nw = reg.installing;
-          if(nw) nw.addEventListener('statechange', () => {
-            if(nw.state === 'activated') {
-              // Trigger a background cache of the page
-              caches.open(CACHE).then(c =>
-                fetch(PAGE_URL, {cache:'reload'}).then(r => { if(r.ok) c.put(PAGE_URL, r); }).catch(()=>{})
-              );
-            }
-          });
-        });
-      })
-      .catch(() => {});
-  } catch(e) {}
-}
-
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // INSTALL PROMPT
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 let _dPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   _dPrompt=e;
-  // Delay banner slightly so it doesn't appear on page load
   setTimeout(()=>{
-    if(!localStorage.getItem('sm_install_dismissed')){
-      document.getElementById('installBanner').classList.add('show');
-    }
+    if(!localStorage.getItem('sm_nodismiss'))
+      G('installBanner').classList.add('show');
   },4000);
 });
 window.addEventListener('appinstalled',()=>{
-  document.getElementById('installBanner').classList.remove('show');
+  G('installBanner').classList.remove('show');
   _dPrompt=null;
   toast('✅ ShopMaster Pro installed!');
 });
 async function doInstall(){
-  if(!_dPrompt)return;
+  if(!_dPrompt) return;
   _dPrompt.prompt();
   const{outcome}=await _dPrompt.userChoice;
   _dPrompt=null;
-  document.getElementById('installBanner').classList.remove('show');
-  if(outcome==='accepted')toast('🎉 Installing ShopMaster Pro…');
+  G('installBanner').classList.remove('show');
+  if(outcome==='accepted') toast('🎉 Installing…');
 }
 function dismissInstall(){
-  document.getElementById('installBanner').classList.remove('show');
-  localStorage.setItem('sm_install_dismissed','1');
+  G('installBanner').classList.remove('show');
+  localStorage.setItem('sm_nodismiss','1');
 }
-
-// ═══════════════════════════════════════════════
-// ONLINE / OFFLINE INDICATOR
-// ═══════════════════════════════════════════════
-function updateNetStatus(){
-  const pill=document.getElementById('offlinePill');
-  if(!navigator.onLine){
-    pill.classList.add('show');
-  } else {
-    pill.classList.remove('show');
-  }
-}
-window.addEventListener('online', ()=>{updateNetStatus();toast('🌐 Back online');});
-window.addEventListener('offline',()=>{updateNetStatus();toast('📴 Offline — using cached data');});
-updateNetStatus();
 
 </script>
 </body>
