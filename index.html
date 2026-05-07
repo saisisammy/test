@@ -1,2020 +1,1882 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EduTrackFee — School Fee Management</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ShopMaster">
+<meta name="description" content="ShopMaster Pro – Complete Shop Management">
+<link id="pwaManifest" rel="manifest">
+<title>ShopMaster Pro</title>
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-  <!-- Firebase SDK (compat for single-file use) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Firebase Compat -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    /* ─── CSS Variables ─── */
-    :root {
-      --navy:         #0D1B2A;
-      --navy-2:       #142235;
-      --navy-3:       #1C3050;
-      --blue:         #2563EB;
-      --blue-lt:      #3B82F6;
-      --blue-pale:    #EFF6FF;
-      --text:         #0F172A;
-      --text-2:       #475569;
-      --text-3:       #94A3B8;
-      --bg:           #F1F5F9;
-      --white:        #FFFFFF;
-      --border:       #E2E8F0;
-      --border-2:     #CBD5E1;
-      --radius:       12px;
-      --radius-sm:    8px;
-      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
-      --shadow-md:    0 4px 24px rgba(0,0,0,.12);
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-      /* status */
-      --green:        #16A34A; --green-bg: #F0FDF4;
-      --amber:        #D97706; --amber-bg: #FFFBEB;
-      --red:          #DC2626; --red-bg:   #FEF2F2;
-      --purple:       #7C3AED; --purple-bg:#F5F3FF;
-      --gray:         #64748B; --gray-bg:  #F8FAFC;
-      --sky:          #0284C7; --sky-bg:   #E0F2FE;
+<style>
+:root {
+  --bg: #0f172a;
+  --bg2: #1e293b;
+  --bg3: #334155;
+  --card: #1e293b;
+  --border: #334155;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --orange: #fb923c;
+  --purple: #c084fc;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
 
-      --sidebar-w:    260px;
-    }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+input,select,button,textarea{font-family:inherit}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* SCREENS */
+.screen{display:none;min-height:100vh}
+.screen.on{display:block}
+#loadingScreen.on{display:flex}
+#loginScreen.on{display:flex}
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-    h1,h2,h3,h4,h5 { font-family: 'Outfit', sans-serif; font-weight: 700; line-height: 1.25; }
-    h1 { font-size: 2rem; }
-    h2 { font-size: 1.5rem; }
-    h3 { font-size: 1.125rem; }
-    h4 { font-size: 1rem; }
-    p  { color: var(--text-2); }
+/* HEADER */
+.app-hdr{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  border-bottom:1px solid var(--border);
+  padding:14px 16px;position:sticky;top:0;z-index:200;
+}
+.app-hdr h1{font-size:17px;font-weight:800;color:var(--text);line-height:1.2}
+.app-hdr p{font-size:11px;color:var(--text3);margin-top:1px}
 
-    a { color: inherit; text-decoration: none; }
-    input, select, textarea {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-    }
-    button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
+/* TAB NAV */
+.tab-nav{
+  display:flex;overflow-x:auto;gap:4px;padding:10px 12px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:60px;z-index:190;scrollbar-width:none;
+}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{
+  padding:7px 14px;border-radius:99px;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+  background:transparent;color:var(--text3);transition:all .2s;
+  letter-spacing:.3px;
+}
+.tab-btn.active{background:var(--accent);color:#0f172a}
+.tab-btn:not(.active):hover{background:var(--bg3);color:var(--text)}
 
-    /* ─── Scrollbar ─── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+/* PANES */
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 
-    /* ─── Auth Screen ─── */
-    #auth-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: var(--navy);
-      position: relative;
-      overflow: hidden;
-    }
-    #auth-screen::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 60% 50% at 10% 90%, rgba(37,99,235,.35) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 40% at 90% 10%, rgba(124,58,237,.2) 0%, transparent 55%);
-      pointer-events: none;
-    }
-    .auth-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      max-width: 900px;
-      width: 94%;
-      min-height: 560px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 32px 80px rgba(0,0,0,.45);
-      position: relative;
-      z-index: 1;
-    }
-    .auth-hero {
-      background: linear-gradient(145deg, var(--blue) 0%, #1D4ED8 100%);
-      padding: 56px 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      color: #fff;
-    }
-    .auth-hero .logo-mark {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .logo-icon {
-      width: 44px; height: 44px;
-      background: rgba(255,255,255,.18);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-    }
-    .auth-hero .brand { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #fff; }
-    .auth-hero .tagline { font-size: .8rem; color: rgba(255,255,255,.65); }
-    .auth-hero h2 { font-size: 2rem; font-family: 'Outfit', sans-serif; font-weight: 800; margin-bottom: 12px; }
-    .auth-hero p { color: rgba(255,255,255,.75); font-size: .92rem; }
-    .auth-features { list-style: none; }
-    .auth-features li {
-      display: flex; gap: 10px; align-items: flex-start;
-      color: rgba(255,255,255,.85); font-size: .88rem;
-      padding: 6px 0;
-    }
-    .auth-features li::before { content: '✓'; color: #86EFAC; flex-shrink: 0; font-weight: 700; }
-    .auth-powered { font-size: .72rem; color: rgba(255,255,255,.45); }
+/* PAGE BODY */
+.page-body{padding:14px;padding-bottom:40px;max-width:520px;margin:0 auto}
 
-    .auth-form-panel {
-      background: var(--white);
-      padding: 48px 44px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .auth-form-panel h3 { font-size: 1.5rem; margin-bottom: 4px; }
-    .auth-form-panel .sub { color: var(--text-3); margin-bottom: 28px; font-size: .88rem; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
-    .form-group input {
-      width: 100%; padding: 11px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      outline: none;
-      transition: border .2s;
-      background: var(--bg);
-    }
-    .form-group input:focus { border-color: var(--blue); background: #fff; }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 11px 20px;
-      border-radius: var(--radius-sm);
-      font-size: .88rem; font-weight: 600;
-      border: none; transition: all .18s;
-      white-space: nowrap;
-    }
-    .btn-primary {
-      background: var(--blue); color: #fff;
-    }
-    .btn-primary:hover { background: #1D4ED8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.35); }
-    .btn-ghost { background: transparent; color: var(--text-2); border: 1.5px solid var(--border); }
-    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
-    .btn-danger { background: var(--red); color: #fff; }
-    .btn-danger:hover { background: #B91C1C; }
-    .btn-sm { padding: 7px 14px; font-size: .8rem; }
-    .btn-full { width: 100%; }
-    .auth-switch { text-align: center; margin-top: 16px; font-size: .85rem; color: var(--text-3); }
-    .auth-switch a { color: var(--blue); font-weight: 600; cursor: pointer; }
-    .error-msg { color: var(--red); font-size: .82rem; margin-top: -8px; margin-bottom: 12px; display: none; }
-    .error-msg.show { display: block; }
-    .loading-spinner {
-      width: 18px; height: 18px;
-      border: 2.5px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* CARDS */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;
+  transition:border-color .2s;
+}
+.card-sm{padding:10px 12px}
 
-    /* ─── App Shell ─── */
-    #app-shell { display: none; flex-direction: row; min-height: 100vh; }
-    #app-shell.visible { display: flex; }
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;
+}
+.stat .val{font-size:17px;font-weight:800;font-family:'Space Mono',monospace;margin-top:4px;letter-spacing:-.5px}
+.stat .lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat.accent{border-color:var(--accent);background:rgba(56,189,248,.06)}
+.stat.green{border-color:var(--green);background:rgba(74,222,128,.06)}
+.stat.red{border-color:var(--red);background:rgba(248,113,113,.06)}
+.stat.yellow{border-color:var(--yellow);background:rgba(251,191,36,.06)}
+.stat.purple{border-color:var(--purple);background:rgba(192,132,252,.06)}
+.stat.orange{border-color:var(--orange);background:rgba(251,146,60,.06)}
 
-    /* ─── Sidebar ─── */
-    #sidebar {
-      width: var(--sidebar-w);
-      background: var(--navy);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      z-index: 100;
-      transition: transform .3s ease;
-    }
-    .sidebar-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-    }
-    .sidebar-logo .brand-row { display: flex; align-items: center; gap: 10px; }
-    .sidebar-logo .logo-box {
-      width: 38px; height: 38px;
-      background: var(--blue);
-      border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: #fff; flex-shrink: 0;
-    }
-    .sidebar-logo .brand-name { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 800; color: #fff; }
-    .sidebar-logo .brand-sub { font-size: .68rem; color: rgba(255,255,255,.35); }
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;
+  font-weight:700;font-size:13px;transition:all .15s;letter-spacing:.2px;
+}
+.btn:active{transform:scale(.97)}
+.btn-accent{background:var(--accent);color:#0f172a}
+.btn-accent:hover{background:#7dd3fc}
+.btn-green{background:var(--green);color:#052e16}
+.btn-red{background:var(--red);color:#450a0a}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--border)}
+.btn-wa{background:#25D366;color:#fff;font-size:12px;padding:7px 11px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn-sms{background:var(--accent2);color:#fff;font-size:12px;padding:7px 11px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:7px}
+.btn-xs{padding:5px 10px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 
-    .sidebar-school-badge {
-      margin: 14px 16px 0;
-      padding: 10px 12px;
-      background: rgba(255,255,255,.05);
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.07);
-    }
-    .sidebar-school-badge .school-label { font-size: .65rem; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .06em; }
-    .sidebar-school-badge .school-name { font-size: .85rem; color: rgba(255,255,255,.9); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* FORM */
+.field{margin-bottom:14px}
+.lbl{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.inp{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);font-size:14px;background:var(--bg);
+  color:var(--text);transition:border-color .2s;outline:none;
+}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+.inp[readonly]{background:var(--bg2);color:var(--text3)}
+.inp-prefix{
+  display:flex;
+}
+.inp-prefix .prefix{
+  background:var(--bg2);border:1.5px solid var(--border);border-right:none;
+  border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+  padding:11px 12px;color:var(--text3);font-weight:700;font-size:13px;
+  white-space:nowrap;display:flex;align-items:center;
+}
+.inp-prefix .inp{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.inp-prefix-left{background:var(--bg2);border:1.5px solid var(--border);border-right:none;border-radius:var(--radius-sm) 0 0 var(--radius-sm);padding:11px 12px;color:var(--accent);font-weight:800;font-size:14px;display:flex;align-items:center}
+select.inp option{background:var(--bg2)}
 
-    .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
-    .nav-section-label {
-      font-size: .65rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .1em; color: rgba(255,255,255,.25);
-      padding: 14px 10px 6px;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 11px;
-      padding: 10px 12px;
-      border-radius: 9px;
-      color: rgba(255,255,255,.58);
-      font-size: .88rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all .17s;
-      margin-bottom: 2px;
-    }
-    .nav-item:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
-    .nav-item.active { background: rgba(37,99,235,.25); color: #fff; }
-    .nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
-    .nav-item .nav-badge {
-      margin-left: auto;
-      background: var(--blue);
-      color: #fff;
-      font-size: .68rem;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 99px;
-    }
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.3px}
+.b-green{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.b-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.b-yellow{background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.b-accent{background:rgba(56,189,248,.15);color:var(--accent);border:1px solid rgba(56,189,248,.3)}
+.b-purple{background:rgba(192,132,252,.15);color:var(--purple);border:1px solid rgba(192,132,252,.3)}
 
-    .sidebar-footer {
-      padding: 14px 10px;
-      border-top: 1px solid rgba(255,255,255,.07);
-    }
-    .user-card {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px;
-      border-radius: 9px;
-      background: rgba(255,255,255,.05);
-      cursor: pointer;
-      transition: background .17s;
-    }
-    .user-card:hover { background: rgba(255,255,255,.09); }
-    .user-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--blue) 0%, #7C3AED 100%);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: .85rem; font-weight: 700; flex-shrink: 0;
-    }
-    .user-info { min-width: 0; }
-    .user-name { font-size: .82rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-role { font-size: .7rem; color: rgba(255,255,255,.4); text-transform: capitalize; }
-    .signout-btn { margin-left: auto; color: rgba(255,255,255,.3); font-size: 14px; flex-shrink: 0; transition: color .17s; }
-    .signout-btn:hover { color: rgba(255,255,255,.7); }
+/* ALERTS */
+.alert{border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;margin-bottom:8px;border-left:3px solid}
+.alert-red{background:rgba(248,113,113,.08);border-color:var(--red);color:var(--red)}
+.alert-yellow{background:rgba(251,191,36,.08);border-color:var(--yellow);color:var(--yellow)}
+.alert-green{background:rgba(74,222,128,.08);border-color:var(--green);color:var(--green)}
+.alert-accent{background:rgba(56,189,248,.08);border-color:var(--accent);color:var(--accent)}
 
-    /* ─── Main Content ─── */
-    #main-content {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .top-bar {
-      padding: 0 32px;
-      height: 64px;
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 50;
-    }
-    .top-bar .page-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); }
-    .top-bar .top-actions { display: flex; align-items: center; gap: 10px; }
-    .notif-btn {
-      width: 36px; height: 36px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px;
-      color: var(--text-2);
-      cursor: pointer;
-      transition: all .17s;
-      position: relative;
-    }
-    .notif-btn:hover { border-color: var(--blue); color: var(--blue); }
-    .notif-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1.5px solid #fff; }
-    .hamburger {
-      display: none;
-      background: none; border: none;
-      color: var(--text-2); font-size: 20px; cursor: pointer;
-    }
+/* MODALS */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.modal.open{display:flex}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;
+  max-height:92vh;overflow-y:auto;animation:slideUp .22s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-hdr h3{font-size:17px;font-weight:800}
+.modal-close{background:var(--bg3);border:none;color:var(--text2);width:30px;height:30px;border-radius:99px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--text)}
 
-    .page-body {
-      padding: 28px 32px;
-      flex: 1;
-      animation: fadein .3s ease;
-    }
-    @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:rgba(56,189,248,.08);color:var(--accent);padding:8px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.3px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid rgba(51,65,85,.5);color:var(--text2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(56,189,248,.03)}
 
-    /* ─── Cards ─── */
-    .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-    .card-header {
-      padding: 20px 24px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-    }
-    .card-header h3 { margin: 0; }
-    .card-body { padding: 20px 24px; }
+/* TOAST */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);color:var(--text);padding:11px 18px;
+  border-radius:99px;font-size:13px;font-weight:600;z-index:9999;
+  white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.5);
+  border:1px solid var(--border);display:none;
+  max-width:90vw;text-align:center;
+}
 
-    /* ─── Stats Grid ─── */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      box-shadow: var(--shadow);
-      display: flex; flex-direction: column; gap: 4px;
-      position: relative; overflow: hidden;
-      transition: transform .2s, box-shadow .2s;
-    }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .stat-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
-    .stat-card.blue::before   { background: var(--blue); }
-    .stat-card.green::before  { background: var(--green); }
-    .stat-card.amber::before  { background: var(--amber); }
-    .stat-card.red::before    { background: var(--red); }
-    .stat-card.purple::before { background: var(--purple); }
+/* FORMULA */
+.formula-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(51,65,85,.4);font-size:13px}
+.formula-row:last-child{border-bottom:none;font-size:15px;font-weight:800;padding-top:12px}
+.formula-row.total{border-top:2px solid var(--border);margin-top:4px}
 
-    .stat-label { font-size: .75rem; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
-    .stat-value { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text); line-height: 1.1; }
-    .stat-sub { font-size: .75rem; color: var(--text-3); }
-    .stat-icon { position: absolute; top: 18px; right: 18px; font-size: 22px; opacity: .25; }
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:14px 0}
 
-    /* ─── Table ─── */
-    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
-    table { width: 100%; border-collapse: collapse; }
-    thead { background: var(--bg); }
-    th {
-      padding: 11px 16px;
-      text-align: left;
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--text-3);
-      white-space: nowrap;
-      border-bottom: 1px solid var(--border);
-    }
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: .88rem;
-      color: var(--text);
-      vertical-align: middle;
-    }
-    tbody tr { transition: background .15s; }
-    tbody tr:hover { background: #F8FAFC; }
-    tbody tr:last-child td { border-bottom: none; }
+/* SALE TYPE TOGGLE */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.type-btn{padding:10px;border-radius:var(--radius-sm);border:2px solid var(--border);background:transparent;color:var(--text3);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s}
+.type-btn.cash.sel{border-color:var(--accent);background:rgba(56,189,248,.1);color:var(--accent)}
+.type-btn.debt.sel{border-color:var(--red);background:rgba(248,113,113,.1);color:var(--red)}
 
-    /* ─── Badges / Pills ─── */
-    .badge {
-      display: inline-flex; align-items: center;
-      padding: 3px 10px;
-      border-radius: 99px;
-      font-size: .72rem;
-      font-weight: 700;
-      gap: 5px;
-    }
-    .badge-green  { background: var(--green-bg);  color: var(--green); }
-    .badge-amber  { background: var(--amber-bg);  color: var(--amber); }
-    .badge-red    { background: var(--red-bg);    color: var(--red); }
-    .badge-purple { background: var(--purple-bg); color: var(--purple); }
-    .badge-blue   { background: var(--blue-pale); color: var(--blue); }
-    .badge-gray   { background: var(--gray-bg);   color: var(--gray); }
-    .badge-sky    { background: var(--sky-bg);    color: var(--sky); }
-    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+/* CLAIM BOX */
+.claim{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);border-radius:var(--radius-sm);padding:10px;font-size:11px;color:var(--text3);font-style:italic;line-height:1.5;margin:8px 0}
 
-    /* ─── Modal ─── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(3px);
-      z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
-    }
-    .modal {
-      background: var(--white);
-      border-radius: 16px;
-      width: 100%; max-width: 520px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.25);
-      animation: modalIn .25s ease;
-    }
-    @keyframes modalIn { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: none; } }
-    .modal-header {
-      padding: 22px 26px 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-header h3 { margin: 0; }
-    .modal-close { background: none; border: none; font-size: 20px; color: var(--text-3); cursor: pointer; line-height: 1; transition: color .17s; }
-    .modal-close:hover { color: var(--text); }
-    .modal-body { padding: 22px 26px; }
-    .modal-footer { padding: 16px 26px 22px; display: flex; gap: 10px; justify-content: flex-end; }
+/* DEBT CARD */
+.debt-active{border-left:3px solid var(--red)}
+.debt-paid{border-left:3px solid var(--green);opacity:.7}
 
-    /* ─── Search Bar ─── */
-    .search-bar {
-      display: flex; align-items: center; gap: 8px;
-      padding: 9px 14px;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: .88rem;
-      color: var(--text-2);
-      transition: border .18s;
-    }
-    .search-bar:focus-within { border-color: var(--blue); background: #fff; }
-    .search-bar input { border: none; background: transparent; outline: none; flex: 1; color: var(--text); }
-    .search-bar input::placeholder { color: var(--text-3); }
+/* SNAIL */
+.snail{border-left:3px solid var(--yellow)!important;background:rgba(251,191,36,.04)!important}
 
-    /* ─── Grid Layouts ─── */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+/* PROFIT CARD */
+.profit-big{
+  background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));
+  border:1px solid rgba(56,189,248,.2);border-radius:var(--radius);
+  padding:20px;text-align:center;margin-bottom:12px;
+}
+.profit-big .num{font-size:38px;font-weight:800;font-family:'Space Mono',monospace;letter-spacing:-2px;margin:6px 0}
 
-    /* ─── Progress Bar ─── */
-    .progress-wrap { background: var(--border); border-radius: 99px; height: 6px; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 99px; transition: width .4s ease; }
-    .progress-bar.blue   { background: var(--blue); }
-    .progress-bar.green  { background: var(--green); }
-    .progress-bar.amber  { background: var(--amber); }
-    .progress-bar.red    { background: var(--red); }
+/* SHOP PROFIT CARD (admin) */
+.shop-perf{
+  background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(129,140,248,.06));
+  border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);
+  padding:14px;margin-bottom:12px;
+}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.perf-cell{background:rgba(255,255,255,.04);border-radius:8px;padding:8px;text-align:center}
+.perf-cell .cv{font-size:12px;font-weight:800;font-family:'Space Mono',monospace}
+.perf-cell .ck{font-size:10px;color:var(--text3);margin-top:2px}
 
-    /* ─── Donut Chart (pure CSS) ─── */
-    .donut { position: relative; display: inline-flex; align-items: center; justify-content: center; }
-    .donut svg { transform: rotate(-90deg); }
-    .donut-center { position: absolute; text-align: center; }
-    .donut-pct { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text); }
-    .donut-lbl { font-size: .7rem; color: var(--text-3); }
+/* SECTION HEADER */
+.sec-hdr{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
 
-    /* ─── Onboarding Checklist ─── */
-    .onboard-step { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
-    .onboard-step:last-child { border-bottom: none; }
-    .step-circle {
-      width: 34px; height: 34px; flex-shrink: 0;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px;
-    }
-    .step-circle.done { background: var(--green-bg); color: var(--green); }
-    .step-circle.pending { background: var(--blue-pale); color: var(--blue); }
-    .step-circle.locked { background: var(--gray-bg); color: var(--text-3); }
-    .step-text h4 { font-size: .9rem; margin-bottom: 1px; }
-    .step-text p  { font-size: .78rem; margin: 0; }
+/* PRODUCT ROW */
+.prod-row{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.prod-row:hover{border-color:var(--accent)}
+.prod-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.prod-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:var(--text3);margin-top:6px}
+.prod-meta span b{color:var(--text)}
+.prod-actions{display:flex;gap:6px;margin-top:10px}
 
-    /* ─── Page Header Row ─── */
-    .page-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-    .page-hdr h2 { margin: 0 0 2px; }
-    .page-hdr p  { margin: 0; font-size: .88rem; }
+/* ATTR */
+.attr{text-align:center;font-size:11px;color:var(--text3);padding:16px 0;border-top:1px solid var(--border);margin-top:20px}
+.attr b{color:var(--accent)}
 
-    /* ─── Tabs ─── */
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-    .tab-btn { padding: 9px 16px; border: none; background: none; font-size: .88rem; font-weight: 500; color: var(--text-3); cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1px; transition: all .17s; }
-    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+/* LOGIN */
+#loginScreen{
+  background:var(--bg);min-height:100vh;flex-direction:column;
+  align-items:center;justify-content:center;padding:20px;
+}
+.login-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:20px;padding:28px 24px;width:100%;max-width:360px;
+}
+.google-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  padding:13px 20px;color:var(--text);font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .2s;
+}
+.google-btn:hover{border-color:var(--accent);background:rgba(56,189,248,.06)}
 
-    /* ─── Empty State ─── */
-    .empty-state { text-align: center; padding: 52px 20px; }
-    .empty-state .empty-icon { font-size: 40px; margin-bottom: 14px; opacity: .3; }
-    .empty-state h4 { margin-bottom: 6px; color: var(--text-2); }
-    .empty-state p { font-size: .85rem; }
+/* LOADING SCREEN */
+#loadingScreen{
+  background:var(--bg);min-height:100vh;
+  flex-direction:column;align-items:center;justify-content:center;
+}
+.spin{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:rot .7s linear infinite;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
 
-    /* ─── Toast ─── */
-    #toast-container {
-      position: fixed; bottom: 24px; right: 24px; z-index: 999;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .toast {
-      background: var(--navy);
-      color: #fff;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: .85rem;
-      font-weight: 500;
-      box-shadow: 0 8px 24px rgba(0,0,0,.25);
-      display: flex; align-items: center; gap: 10px;
-      animation: toastIn .25s ease;
-      max-width: 320px;
-    }
-    .toast.success { border-left: 3px solid var(--green); }
-    .toast.error   { border-left: 3px solid var(--red); }
-    .toast.info    { border-left: 3px solid var(--blue); }
-    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; } }
+/* MONO NUMBERS */
+.mono{font-family:'Space Mono',monospace}
 
-    /* ─── Sidebar Overlay (mobile) ─── */
-    #sidebar-overlay {
-      display: none;
-      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99;
-    }
+/* INSTALL BANNER */
+#installBanner{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border-top:1px solid rgba(56,189,248,.3);
+  padding:12px 16px;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.5);
+}
+#installBanner.show{display:flex}
 
-    /* ─── Access Revoked ─── */
-    .revoked-screen {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; text-align: center; padding: 40px;
-      background: var(--navy);
-    }
-    .revoked-screen .icon { font-size: 64px; margin-bottom: 20px; }
-    .revoked-screen h2 { color: #fff; font-size: 1.8rem; margin-bottom: 8px; }
-    .revoked-screen p  { color: rgba(255,255,255,.55); max-width: 400px; }
+/* OFFLINE PILL */
+#offlinePill{
+  display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);
+  background:#1e293b;border:1px solid var(--yellow);color:var(--yellow);
+  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  z-index:700;white-space:nowrap;letter-spacing:.3px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+#offlinePill.show{display:block}
 
-    /* ─── Reports ─── */
-    .chart-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
-    .chart-bar-row { display: flex; align-items: center; gap: 12px; }
-    .chart-bar-label { font-size: .8rem; color: var(--text-2); width: 60px; text-align: right; flex-shrink: 0; }
-    .chart-bar-outer { flex: 1; background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; }
-    .chart-bar-inner { height: 100%; border-radius: 99px; background: var(--blue); }
-    .chart-bar-val { font-size: .8rem; font-weight: 600; color: var(--text); width: 70px; flex-shrink: 0; }
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty .ico{font-size:40px;margin-bottom:12px}
+.empty p{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.empty small{font-size:12px}
 
-    /* ─── School Cards ─── */
-    .school-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-      box-shadow: var(--shadow);
-      transition: transform .2s, box-shadow .2s;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .school-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .school-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .school-avatar {
-      width: 46px; height: 46px;
-      border-radius: 10px;
-      background: var(--blue-pale);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-    }
-    .school-info h4 { font-size: .95rem; margin-bottom: 3px; }
-    .school-info p  { font-size: .78rem; margin: 0; }
-    .school-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-    .school-stat { background: var(--bg); border-radius: 8px; padding: 8px 10px; text-align: center; }
-    .school-stat .sv { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text); }
-    .school-stat .sl { font-size: .66rem; color: var(--text-3); }
-    .school-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* SALE SUMMARY MINI */
+.summary-line{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(51,65,85,.4)}
+.summary-line:last-child{border-bottom:none}
 
-    /* ─── Select Styled ─── */
-    .select-wrap { position: relative; }
-    .select-wrap select {
-      width: 100%; padding: 10px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--bg);
-      outline: none;
-      appearance: none;
-      cursor: pointer;
-      transition: border .2s;
-    }
-    .select-wrap select:focus { border-color: var(--blue); background: #fff; }
-    .select-wrap::after {
-      content: '▾';
-      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      color: var(--text-3); pointer-events: none; font-size: 12px;
-    }
+/* ERROR / SUCCESS */
+.err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 12px;color:var(--red);font-size:13px;margin-top:8px}
+.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:10px 12px;color:var(--green);font-size:13px;margin-top:8px}
 
-    /* ─── Responsive ─── */
-    @media (max-width: 900px) {
-      #sidebar { transform: translateX(-100%); }
-      #sidebar.open { transform: none; }
-      #sidebar-overlay.open { display: block; }
-      #main-content { margin-left: 0; }
-      .hamburger { display: flex; }
-      .page-body { padding: 20px 16px; }
-      .auth-grid { grid-template-columns: 1fr; max-width: 440px; }
-      .auth-hero { display: none; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .two-col, .main-grid { grid-template-columns: 1fr; }
-      .three-col { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 520px) {
-      .stats-grid { grid-template-columns: 1fr 1fr; }
-      .three-col { grid-template-columns: 1fr; }
-    }
+/* SNAILING item in stock */
+.snail-tag{font-size:9px;background:rgba(251,191,36,.15);color:var(--yellow);border:1px solid rgba(251,191,36,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.low-tag{font-size:9px;background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);border-radius:99px;padding:1px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 
-    /* ─── Google Sign-In Button ─── */
-    .btn-google {
-      background: var(--white);
-      color: var(--text);
-      border: 1.5px solid var(--border);
-      font-size: .95rem;
-      font-weight: 600;
-      padding: 13px 20px;
-      gap: 12px;
-      border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.08);
-      transition: all .2s;
-    }
-    .btn-google:hover {
-      background: #F8FAFC;
-      border-color: #94A3B8;
-      box-shadow: 0 4px 16px rgba(0,0,0,.12);
-      transform: translateY(-1px);
-    }
-    .btn-google:active { transform: none; box-shadow: none; }
-    .btn-google:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-    /* ─── Google avatar in sidebar ─── */
-    .user-avatar img {
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .divider { height: 1px; background: var(--border); margin: 16px 0; }
-    .flex { display: flex; }
-    .flex-center { display: flex; align-items: center; }
-    .gap-2 { gap: 8px; }
-    .gap-3 { gap: 12px; }
-    .ml-auto { margin-left: auto; }
-    .text-sm { font-size: .82rem; }
-    .text-xs { font-size: .72rem; }
-    .font-semibold { font-weight: 600; }
-    .text-muted { color: var(--text-3); }
-    .mb-4 { margin-bottom: 16px; }
-    .mb-6 { margin-bottom: 24px; }
-    .mt-2 { margin-top: 8px; }
-    .mr-2 { margin-right: 8px; }
-  </style>
+@media(min-width:600px){
+  .modal{align-items:center}
+  .modal-box{border-radius:20px;max-width:420px}
+}
+</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════ AUTH SCREEN ══════════════════════════════ -->
-<div id="auth-screen">
-  <div class="auth-grid">
-    <!-- Hero Side -->
-    <div class="auth-hero">
-      <div class="logo-mark">
-        <div class="logo-icon">🎓</div>
+<!-- ===== LOADING ===== -->
+<div id="loadingScreen" class="screen on">
+  <div style="text-align:center">
+    <div style="font-size:52px;margin-bottom:12px">🏪</div>
+    <h1 style="font-size:26px;font-weight:800;margin-bottom:4px">ShopMaster Pro</h1>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:28px">Complete Shop Management</p>
+    <div class="spin" style="margin:0 auto"></div>
+    <p id="loadStatus" style="color:var(--text3);font-size:12px;margin-top:16px;min-height:18px"></p>
+  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
+    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
+  </div>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen" class="screen">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:48px;margin-bottom:10px">🏪</div>
+      <h1 style="font-size:28px;font-weight:800">ShopMaster Pro</h1>
+      <p style="color:var(--text3);font-size:13px;margin-top:4px">Kenya's Smart Shop Manager</p>
+    </div>
+    <div class="login-card">
+      <h2 style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px">Sign In</h2>
+      <p style="color:var(--text3);font-size:13px;text-align:center;margin-bottom:20px">Use your registered Google account</p>
+      <button id="gBtn" onclick="doGoogleSignIn()" class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div id="loginErr" class="err" style="display:none"></div>
+      <div id="loginSpin" style="display:none;justify-content:center;margin-top:14px"><div class="spin" style="width:24px;height:24px"></div></div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;line-height:1.6">
+      Shop owners must be registered by admin<br>
+      <span style="color:var(--text3)">Contact administrator for access</span>
+    </p>
+  </div>
+  <div class="attr" style="position:absolute;bottom:16px;border:none;margin:0">
+    Powered by <b>Mr. Saisi Nyongesa Sammy</b>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div id="adminPanel" class="screen">
+  <div class="app-hdr">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px">🛡️</div>
         <div>
-          <div class="brand">EduTrackFee</div>
-          <div class="tagline">School Fee Management Platform</div>
+          <h1>ShopMaster Admin</h1>
+          <p id="adminEmail">Administrator</p>
         </div>
       </div>
-      <div>
-        <h2>Simplify school<br/>fee management</h2>
-        <p>A comprehensive platform built for Kenyan schools — track, collect, and report with confidence.</p>
-        <ul class="auth-features" style="margin-top:24px">
-          <li>Multi-role access: Admin, Bursar & Teachers</li>
-          <li>Real-time fee tracking per student & term</li>
-          <li>Automated receipts & SMS reminders</li>
-          <li>Comprehensive financial reports</li>
-          <li>Overpayment carry-forward system</li>
-        </ul>
-      </div>
-      <div class="auth-powered">Powered by Mr. Saisi Nyongesa Sammy</div>
+      <button onclick="doSignOut()" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="aTab('overview',this)">📊 Overview</button>
+    <button class="tab-btn" onclick="aTab('register',this)">➕ Register Shop</button>
+    <button class="tab-btn" onclick="aTab('shops',this)">🏪 All Shops</button>
+  </div>
+  <div class="page-body">
+
+    <!-- Admin Overview -->
+    <div id="a-overview" class="tab-pane active">
+      <div class="sec-hdr">Live Shop Performance</div>
+      <div id="adminOverview"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading shops...</p></div></div>
     </div>
 
-    <!-- Google Sign-In Panel -->
-    <div class="auth-form-panel">
-      <div id="login-form">
-        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 0 32px">
-          <div style="width:64px;height:64px;background:var(--blue);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:20px;box-shadow:0 8px 24px rgba(37,99,235,.3)">🎓</div>
-          <h3 style="font-size:1.6rem;margin-bottom:6px">Welcome to EduTrackFee</h3>
-          <p class="sub" style="max-width:260px">Sign in with your Google account to access your school dashboard</p>
-        </div>
-
-        <div id="google-signin-error" class="error-msg" style="text-align:center;margin-bottom:12px"></div>
-
-        <button class="btn btn-google btn-full" id="google-btn" onclick="handleGoogleSignIn()">
-          <svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            <path fill="none" d="M0 0h48v48H0z"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        <div style="margin-top:24px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px">Access is role-based</div>
-          <div style="display:flex;flex-direction:column;gap:5px">
-            <div style="font-size:.8rem;color:var(--text-2);display:flex;align-items:center;gap:7px"><span>🛡️</span> Super Admin — full platform control</div>
-            <div style="font-size:.8rem;color:var(--text-2);display:flex;align-items:center;gap:7px"><span>🏫</span> School Admin — manage your school</div>
-            <div style="font-size:.8rem;color:var(--text-2);display:flex;align-items:center;gap:7px"><span>💳</span> Bursar — record & track payments</div>
-            <div style="font-size:.8rem;color:var(--text-2);display:flex;align-items:center;gap:7px"><span>📚</span> Class Teacher — view your class fees</div>
+    <!-- Admin Register -->
+    <div id="a-register" class="tab-pane">
+      <div class="card">
+        <div style="font-size:15px;font-weight:800;margin-bottom:18px">Register New Shop</div>
+        <div class="field"><label class="lbl">Shop Name *</label><input type="text" id="r_n" class="inp" placeholder="e.g. Mama Wanjiku General Store"></div>
+        <div class="field"><label class="lbl">Location *</label><input type="text" id="r_l" class="inp" placeholder="e.g. Westlands, Nairobi"></div>
+        <div class="field"><label class="lbl">Shopkeeper Full Name *</label><input type="text" id="r_kn" class="inp" placeholder="Full name"></div>
+        <div class="field">
+          <label class="lbl">Shopkeeper Phone *</label>
+          <div class="inp-prefix">
+            <span class="prefix">+254</span>
+            <input type="tel" id="r_ph" class="inp" placeholder="7XXXXXXXX" maxlength="9">
           </div>
         </div>
-
-        <div style="margin-top:20px;text-align:center;font-size:.75rem;color:var(--text-3)">
-          Your account access is managed by your school administrator.
+        <div class="field">
+          <label class="lbl">Shopkeeper Gmail *</label>
+          <input type="email" id="r_em" class="inp" placeholder="shopkeeper@gmail.com">
+          <p style="font-size:11px;color:var(--text3);margin-top:5px">⚠️ Must be Gmail — used for Google Sign-In login</p>
         </div>
+        <div id="regErr" class="err" style="display:none"></div>
+        <div id="regOk" class="ok" style="display:none"></div>
+        <button onclick="regShop()" class="btn btn-accent" style="width:100%;margin-top:4px;padding:12px">Register Shop</button>
+      </div>
+    </div>
 
-        <div style="margin-top:28px;padding-top:16px;border-top:1px solid var(--border);text-align:center;font-size:.72rem;color:var(--text-3)">
-          Powered by Mr. Saisi Nyongesa Sammy
+    <!-- Admin Shops List -->
+    <div id="a-shops" class="tab-pane">
+      <div class="sec-hdr">All Registered Shops</div>
+      <div id="adminShops"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+  </div>
+  <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
+</div>
+
+<!-- ===== SHOP PANEL ===== -->
+<div id="shopPanel" class="screen">
+  <div class="app-hdr">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+        <div style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);border-radius:10px;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">🏪</div>
+        <div style="min-width:0">
+          <h1 id="sh_name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">My Shop</h1>
+          <p id="sh_loc" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></p>
         </div>
       </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px">
+        <button onclick="openSettings()" class="btn btn-ghost btn-sm" style="padding:7px 9px">⚙️</button>
+        <button onclick="doSignOut()" class="btn btn-ghost btn-sm">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="sTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab-btn" onclick="sTab('stock',this)">📦 Stock</button>
+    <button class="tab-btn" onclick="sTab('sell',this)">🛒 Sell</button>
+    <button class="tab-btn" onclick="sTab('debtors',this)">💳 Debtors</button>
+    <button class="tab-btn" onclick="sTab('expenses',this)">💸 Expenses</button>
+    <button class="tab-btn" onclick="sTab('profit',this)">📈 Profit</button>
+    <button class="tab-btn" onclick="sTab('audit',this)">📋 Audit</button>
+  </div>
+
+  <div class="page-body">
+
+    <!-- DASHBOARD -->
+    <div id="s-dashboard" class="tab-pane active">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:18px;font-weight:800;color:var(--accent)" id="d_sName"></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="d_date"></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat accent"><div class="lbl">Stock Value</div><div class="val" id="d_stkVal" style="color:var(--accent)">KES 0</div></div>
+        <div class="stat green"><div class="lbl">Total Sales</div><div class="val" id="d_sales" style="color:var(--green)">KES 0</div></div>
+        <div class="stat red"><div class="lbl">Unpaid Debts</div><div class="val" id="d_debts" style="color:var(--red)">KES 0</div></div>
+        <div class="stat"><div class="lbl">Net Profit</div><div class="val" id="d_profit">KES 0</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat" style="text-align:center"><div class="val" id="d_pCount" style="font-size:30px;color:var(--accent)">0</div><div class="lbl" style="margin-top:4px">Products</div></div>
+        <div class="stat" style="text-align:center"><div class="val" id="d_dCount" style="font-size:30px;color:var(--red)">0</div><div class="lbl" style="margin-top:4px">Active Debtors</div></div>
+        <div class="stat yellow" style="text-align:center"><div class="val" id="d_snailC" style="font-size:30px;color:var(--yellow)">0</div><div class="lbl" style="margin-top:4px">Snailing Items</div></div>
+        <div class="stat purple"><div class="lbl">Expenses</div><div class="val" id="d_expTotal" style="color:var(--purple)">KES 0</div></div>
+      </div>
+      <div id="dashAlerts"></div>
+    </div>
+
+    <!-- STOCK -->
+    <div id="s-stock" class="tab-pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-size:16px;font-weight:800">Products in Stock</span>
+        <button onclick="openModal('mAddProd')" class="btn btn-accent btn-sm">+ Add Product</button>
+      </div>
+      <div id="stockContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- SELL -->
+    <div id="s-sell" class="tab-pane">
+      <!-- Sales Summary -->
+      <div class="card card-sm" style="margin-bottom:14px" id="salesSumCard">
+        <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Sales Summary</div>
+        <div id="salesSumContent"><p style="color:var(--text3);font-size:13px">Loading...</p></div>
+      </div>
+
+      <div style="font-size:16px;font-weight:800;margin-bottom:12px">Record a Sale</div>
+      <div class="card">
+        <div class="field"><label class="lbl">Product *</label>
+          <select id="s_prod" class="inp" onchange="onProdChange()">
+            <option value="">— Select product —</option>
+          </select>
+        </div>
+        <div class="field"><label class="lbl">Quantity *</label><input type="number" id="s_qty" class="inp" placeholder="0" min="1" oninput="calcAmt()"></div>
+        <div class="field"><label class="lbl">Amount (Auto)</label><input type="text" id="s_amt" class="inp" readonly placeholder="KES 0.00"></div>
+        <div class="field">
+          <label class="lbl">Sale Type</label>
+          <div class="type-toggle">
+            <button id="btnCash" onclick="setSaleMode('cash')" class="type-btn cash sel">💵 Cash Sale</button>
+            <button id="btnDebt" onclick="setSaleMode('debt')" class="type-btn debt">📝 Debt Sale</button>
+          </div>
+        </div>
+        <div id="debtFields" style="display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <div class="field"><label class="lbl">Debtor Name *</label><input type="text" id="s_dName" class="inp" placeholder="Full name"></div>
+          <div class="field">
+            <label class="lbl">Phone Number *</label>
+            <div class="inp-prefix">
+              <span class="prefix">+254</span>
+              <input type="tel" id="s_dPhone" class="inp" placeholder="7XXXXXXXX" maxlength="9">
+            </div>
+          </div>
+        </div>
+        <div id="saleErr" class="err" style="display:none"></div>
+        <button onclick="recordSale()" class="btn btn-accent" style="width:100%;padding:12px;margin-top:4px">✓ Record Sale</button>
+      </div>
+
+      <div class="sec-hdr" style="margin-top:20px">Recent Sales</div>
+      <div id="recentSales"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- DEBTORS -->
+    <div id="s-debtors" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:12px">Debtors</div>
+      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--red)">⚠️ Total Unpaid Debts</span>
+        <span class="mono" style="font-weight:800;color:var(--red);font-size:16px" id="totalUnpaid">KES 0</span>
+      </div>
+      <div id="debtorsContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div id="s-expenses" class="tab-pane">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:16px;font-weight:800">Expenses</span>
+        <button onclick="openModal('mAddExp')" class="btn btn-accent btn-sm">+ Add Expense</button>
+      </div>
+      <div style="background:rgba(192,132,252,.06);border:1px solid rgba(192,132,252,.2);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--purple)">Total Expenses</span>
+        <span class="mono" style="font-weight:800;color:var(--purple);font-size:16px" id="totalExp">KES 0</span>
+      </div>
+      <div id="expContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Loading...</p></div></div>
+    </div>
+
+    <!-- PROFIT -->
+    <div id="s-profit" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:14px">Profit Analysis</div>
+      <div id="profitContent"><div class="empty"><div class="spin" style="margin:0 auto 12px"></div><p>Calculating...</p></div></div>
+    </div>
+
+    <!-- AUDIT -->
+    <div id="s-audit" class="tab-pane">
+      <div style="font-size:16px;font-weight:800;margin-bottom:14px">Audit Report</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="field">
+          <label class="lbl">Report Period</label>
+          <select id="auditType" class="inp" onchange="onAuditChange()">
+            <option value="today">Today</option>
+            <option value="thisWeek">This Week</option>
+            <option value="thisMonth">This Month</option>
+            <option value="day">Specific Day</option>
+            <option value="week">Specific Week</option>
+            <option value="month">Specific Month</option>
+          </select>
+        </div>
+        <div id="auditDayF" class="field" style="display:none"><label class="lbl">Date</label><input type="date" id="auditDay" class="inp"></div>
+        <div id="auditWeekF" class="field" style="display:none"><label class="lbl">Week Start (Monday)</label><input type="date" id="auditWkStart" class="inp"></div>
+        <div id="auditMonthF" class="field" style="display:none"><label class="lbl">Month</label><input type="month" id="auditMo" class="inp"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <button onclick="genAudit()" class="btn btn-accent">📊 Generate</button>
+          <button onclick="delAuditRecs()" class="btn btn-red btn-ghost">🗑️ Delete Records</button>
+        </div>
+      </div>
+      <div id="auditOutput" style="display:none"></div>
+    </div>
+
+  </div><!-- end page-body -->
+  <div class="attr">Powered by <b>Mr. Saisi Nyongesa Sammy</b></div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Add Product -->
+<div id="mAddProd" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Add Product to Stock</h3><button class="modal-close" onclick="closeModal('mAddProd')">×</button></div>
+    <div class="field"><label class="lbl">Product Name *</label><input type="text" id="p_n" class="inp" placeholder="e.g. Unga W.W 2kg"></div>
+    <div class="field"><label class="lbl">Buying Price (KES) *</label><input type="number" id="p_b" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Selling Price (KES) *</label><input type="number" id="p_s" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Quantity *</label><input type="number" id="p_q" class="inp" placeholder="0" min="1"></div>
+    <div id="prodErr" class="err" style="display:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mAddProd')" class="btn btn-ghost">Cancel</button>
+      <button onclick="addProd()" class="btn btn-accent">Add Product</button>
     </div>
   </div>
 </div>
 
-<!-- ═════════════════════════════ ACCESS REVOKED ═════════════════════════════ -->
-<div id="revoked-screen" style="display:none">
-  <div class="revoked-screen">
-    <div class="icon">🔒</div>
-    <h2>Access Revoked</h2>
-    <p style="margin-top:8px">Your school's subscription has been suspended. Please contact the platform administrator to restore access.</p>
-    <button class="btn btn-ghost" style="margin-top:24px;color:#fff;border-color:rgba(255,255,255,.25)" onclick="handleSignOut()">Sign Out</button>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════ APP SHELL ════════════════════════════════ -->
-<div id="app-shell">
-
-  <!-- Sidebar Overlay (mobile) -->
-  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-  <!-- Sidebar -->
-  <nav id="sidebar">
-    <div class="sidebar-logo">
-      <div class="brand-row">
-        <div class="logo-box">🎓</div>
-        <div>
-          <div class="brand-name">EduTrackFee</div>
-          <div class="brand-sub">Fee Management Platform</div>
-        </div>
-      </div>
+<!-- Add Expense -->
+<div id="mAddExp" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Add Expense</h3><button class="modal-close" onclick="closeModal('mAddExp')">×</button></div>
+    <div class="field">
+      <label class="lbl">Category *</label>
+      <select id="e_cat" class="inp" onchange="onExpCat()">
+        <option value="salary">Salary</option>
+        <option value="transport">Transport</option>
+        <option value="marketing">Marketing</option>
+        <option value="other">Other (specify)</option>
+      </select>
     </div>
-
-    <div class="sidebar-school-badge" id="school-badge" style="display:none">
-      <div class="school-label">Current School</div>
-      <div class="school-name" id="school-badge-name">—</div>
-    </div>
-
-    <div class="sidebar-nav" id="nav-links">
-      <!-- Injected by JS based on role -->
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="user-avatar" id="user-avatar-initials">U</div>
-        <div class="user-info">
-          <div class="user-name" id="sidebar-username">Loading...</div>
-          <div class="user-role" id="sidebar-role">—</div>
-        </div>
-        <button class="signout-btn" title="Sign Out" onclick="handleSignOut()">⏻</button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <div id="main-content">
-    <div class="top-bar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="hamburger" onclick="toggleSidebar()">☰</button>
-        <span class="page-title" id="page-title">Dashboard</span>
-      </div>
-      <div class="top-actions">
-        <div class="notif-btn" title="Notifications">
-          🔔
-          <span class="notif-dot"></span>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="navigate('account')">👤 Account</button>
-      </div>
-    </div>
-    <div class="page-body" id="page-body">
-      <!-- Pages rendered here -->
+    <div id="e_otherF" class="field" style="display:none"><label class="lbl">Specify *</label><input type="text" id="e_other" class="inp" placeholder="Describe the expense"></div>
+    <div class="field"><label class="lbl">Amount (KES) *</label><input type="number" id="e_amt" class="inp" placeholder="0.00" step="0.01" min="0.01"></div>
+    <div class="field"><label class="lbl">Date *</label><input type="date" id="e_date" class="inp"></div>
+    <div id="expErr" class="err" style="display:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mAddExp')" class="btn btn-ghost">Cancel</button>
+      <button onclick="addExp()" class="btn btn-accent">Add Expense</button>
     </div>
   </div>
 </div>
 
-<!-- Toast Container -->
-<div id="toast-container"></div>
+<!-- Confirm -->
+<div id="mConfirm" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="cfm_t">Confirm</h3></div>
+    <p id="cfm_m" style="color:var(--text2);font-size:14px;margin-bottom:20px"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button onclick="closeModal('mConfirm')" class="btn btn-ghost">Cancel</button>
+      <button id="cfm_btn" class="btn btn-red" style="background:var(--red);color:#450a0a">Confirm</button>
+    </div>
+  </div>
+</div>
 
-<!-- Modal Container -->
-<div id="modal-container"></div>
+<!-- Settings -->
+<div id="mSettings" class="modal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Shop Settings</h3><button class="modal-close" onclick="closeModal('mSettings')">×</button></div>
+    <div class="field"><label class="lbl">Shop Name</label><input type="text" id="st_n" class="inp"></div>
+    <div class="field"><label class="lbl">Location</label><input type="text" id="st_l" class="inp"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button onclick="closeModal('mSettings')" class="btn btn-ghost">Cancel</button>
+      <button onclick="saveSettings()" class="btn btn-accent">Save Changes</button>
+    </div>
+  </div>
+</div>
 
-<!-- ══════════════════════════════════ JS ════════════════════════════════════ -->
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Offline Pill -->
+<div id="offlinePill">📴 Offline — data cached locally</div>
+
+<!-- Install Banner -->
+<div id="installBanner">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <div style="font-size:28px;flex-shrink:0">🏪</div>
+    <div style="min-width:0">
+      <div style="font-size:13px;font-weight:800;white-space:nowrap">Install ShopMaster Pro</div>
+      <div style="font-size:11px;color:var(--text3);white-space:nowrap">Works offline · Fast home screen access</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button onclick="dismissInstall()" class="btn btn-ghost btn-xs">Later</button>
+    <button onclick="doInstall()" class="btn btn-accent btn-sm">📲 Install</button>
+  </div>
+</div>
+
 <script>
-/* ─────────────────────── FIREBASE CONFIG ──────────────────────────────── */
-const firebaseConfig = {
-  apiKey:            "AIzaSyDiFmHrawu9xryPQmtqDfSKx6V1ltStcd4",
-  authDomain:        "edutrackfee-prod.firebaseapp.com",
-  projectId:         "edutrackfee-prod",
-  storageBucket:     "edutrackfee-prod.firebasestorage.app",
-  messagingSenderId: "130429252118",
-  appId:             "1:130429252118:web:ce16b55c6f4fda7313bb37"
-};
-
-/* ──────────────────────── FIREBASE INIT ──────────────────────────────── */
-firebase.initializeApp(firebaseConfig);
+// ═══════════════════════════════════════════════
+// FIREBASE INIT
+// ═══════════════════════════════════════════════
+firebase.initializeApp({
+  apiKey:"AIzaSyB3E6xFA7EmZIms1PBZjj-OcrO-Rh-vq2I",
+  authDomain:"shopmaster-abdd6.firebaseapp.com",
+  projectId:"shopmaster-abdd6",
+  storageBucket:"shopmaster-abdd6.firebasestorage.app",
+  messagingSenderId:"365547988526",
+  appId:"1:365547988526:web:5760d76dcd3bdd4a3de1bf"
+});
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
-/* ──────────────────────── APP STATE ─────────────────────────────────── */
-const App = {
-  currentUser:   null,
-  userDoc:       null,
-  schoolDoc:     null,
-  currentPage:   'dashboard',
-  SUPER_ADMIN:   'saisisammy@gmail.com',
+// ── Offline persistence (IndexedDB cache for Firestore) ──
+db.enablePersistence({synchronizeTabs:true}).catch(err=>{
+  if(err.code==='failed-precondition') console.warn('ShopMaster: multiple tabs — offline persistence limited to one tab');
+  else if(err.code==='unimplemented') console.warn('ShopMaster: browser does not support Firestore offline persistence');
+});
 
-  get role()   { return this.userDoc?.role || null; },
-  get schoolId(){ return this.userDoc?.school_id || null; },
-  get isSuper(){ return this.currentUser?.email === this.SUPER_ADMIN; },
-};
+const ADMIN_UID = 'xgX5qDLpTBeaM34KgT2O20Afwh02';
+const TS = firebase.firestore.FieldValue.serverTimestamp;
+const INC = firebase.firestore.FieldValue.increment;
 
-/* ──────────────────────── MOCK DATA ─────────────────────────────────── */
-/* Used for UI demo — replace with real Firestore queries per collection  */
-const MOCK = {
-  students: [
-    { id:'S001', student_id:'ADM-001', first_name:'Amani', last_name:'Wanjiku', class_name:'Grade 7A', parent_name:'Grace Wanjiku', parent_phone:'0712345678', status:'active', gender:'female' },
-    { id:'S002', student_id:'ADM-002', first_name:'Brian', last_name:'Otieno',  class_name:'Grade 7A', parent_name:'Peter Otieno',  parent_phone:'0723456789', status:'active', gender:'male'   },
-    { id:'S003', student_id:'ADM-003', first_name:'Cate',  last_name:'Muthoni', class_name:'Grade 8B', parent_name:'Mary Muthoni',  parent_phone:'0734567890', status:'active', gender:'female' },
-    { id:'S004', student_id:'ADM-004', first_name:'David', last_name:'Kamau',   class_name:'Grade 8B', parent_name:'John Kamau',    parent_phone:'0745678901', status:'inactive',gender:'male' },
-    { id:'S005', student_id:'ADM-005', first_name:'Elsa',  last_name:'Akinyi',  class_name:'Grade 9C', parent_name:'Ruth Akinyi',   parent_phone:'0756789012', status:'active', gender:'female' },
-  ],
-  payments: [
-    { id:'P001', student_id:'S001', student_name:'Amani Wanjiku', class:'Grade 7A', amount:5000, method:'mobile_money', receipt:'RCP-0000001', date:'2024-04-01', fee:'School Fees', status:'partial' },
-    { id:'P002', student_id:'S002', student_name:'Brian Otieno',  class:'Grade 7A', amount:12500, method:'bank_transfer', receipt:'RCP-0000002', date:'2024-04-02', fee:'School Fees', status:'paid'    },
-    { id:'P003', student_id:'S003', student_name:'Cate Muthoni',  class:'Grade 8B', amount:3000, method:'cash',          receipt:'RCP-0000003', date:'2024-04-03', fee:'School Fees', status:'partial' },
-    { id:'P004', student_id:'S005', student_name:'Elsa Akinyi',   class:'Grade 9C', amount:12500,method:'mobile_money', receipt:'RCP-0000004', date:'2024-04-04', fee:'School Fees', status:'paid'    },
-  ],
-  feeStructures: [
-    { id:'FS001', fee_name:'School Fees',      amount:12500, fee_type:'mandatory', class_name:'all',      term:'Term 1 2024', due_date:'2024-01-31' },
-    { id:'FS002', fee_name:'Activity Fund',    amount:1500,  fee_type:'optional',  class_name:'all',      term:'Term 1 2024', due_date:'2024-01-31' },
-    { id:'FS003', fee_name:'Lab Fee',          amount:2000,  fee_type:'mandatory', class_name:'Grade 9C', term:'Term 1 2024', due_date:'2024-02-15' },
-    { id:'FS004', fee_name:'School Uniform',   amount:3500,  fee_type:'optional',  class_name:'all',      term:'Term 2 2024', due_date:'2024-05-15' },
-  ],
-  classes: [
-    { id:'C001', class_name:'Grade 7', stream_name:'A', full_name:'Grade 7A', class_teacher_email:'teacher1@school.ac.ke' },
-    { id:'C002', class_name:'Grade 7', stream_name:'B', full_name:'Grade 7B', class_teacher_email:'teacher2@school.ac.ke' },
-    { id:'C003', class_name:'Grade 8', stream_name:'A', full_name:'Grade 8A', class_teacher_email:'teacher3@school.ac.ke' },
-    { id:'C004', class_name:'Grade 8', stream_name:'B', full_name:'Grade 8B', class_teacher_email:'teacher4@school.ac.ke' },
-    { id:'C005', class_name:'Grade 9', stream_name:'C', full_name:'Grade 9C', class_teacher_email:'teacher5@school.ac.ke' },
-  ],
-  terms: [
-    { id:'T001', name:'Term 1 2024', academic_year:'2024', start_date:'2024-01-08', end_date:'2024-04-12', status:'closed',   is_current:false },
-    { id:'T002', name:'Term 2 2024', academic_year:'2024', start_date:'2024-05-06', end_date:'2024-08-02', status:'active',   is_current:true  },
-    { id:'T003', name:'Term 3 2024', academic_year:'2024', start_date:'2024-09-02', end_date:'2024-11-29', status:'upcoming', is_current:false },
-  ],
-  schools: [
-    { id:'SCH001', name:'Sunrise Academy',       address:'Nairobi, Kenya', email:'admin@sunrise.ac.ke', status:'active',    subscription_plan:'premium',  max_students:800, currency:'KES' },
-    { id:'SCH002', name:'Green Valley School',   address:'Mombasa, Kenya', email:'admin@gvs.ac.ke',    status:'active',    subscription_plan:'standard', max_students:500, currency:'KES' },
-    { id:'SCH003', name:'Pioneer High School',   address:'Kisumu, Kenya',  email:'admin@pioneer.ac.ke',status:'suspended', subscription_plan:'basic',    max_students:300, currency:'KES' },
-    { id:'SCH004', name:'Hilltop Primary School',address:'Eldoret, Kenya', email:'admin@hilltop.ac.ke',status:'active',    subscription_plan:'standard', max_students:400, currency:'KES' },
-  ],
-  users: [
-    { id:'U001', email:'admin@sunrise.ac.ke',    full_name:'Dr. Jane Mwangi',   role:'school_admin',  is_active:true  },
-    { id:'U002', email:'bursar@sunrise.ac.ke',   full_name:'Peter Odhiambo',    role:'bursar',        is_active:true  },
-    { id:'U003', email:'teacher1@sunrise.ac.ke', full_name:'Alice Njeri',       role:'class_teacher', is_active:true  },
-    { id:'U004', email:'teacher2@sunrise.ac.ke', full_name:'Moses Kimani',      role:'class_teacher', is_active:false },
-  ],
-};
-
-/* ──────────────────────── NAVIGATION MENUS ──────────────────────────── */
-const NAV_MENUS = {
-  super_admin: [
-    { section:'Platform', items:[
-      { icon:'🏠', label:'Dashboard',  page:'dashboard' },
-      { icon:'🏫', label:'Schools',    page:'schools'   },
-      { icon:'👥', label:'Users',      page:'users'     },
-      { icon:'📊', label:'Reports',    page:'reports'   },
-    ]},
-  ],
-  school_admin: [
-    { section:'School', items:[
-      { icon:'🏠', label:'Dashboard',         page:'dashboard'       },
-      { icon:'🏛️', label:'Classes & Streams', page:'classes'         },
-      { icon:'🎓', label:'Students',          page:'students'        },
-      { icon:'📅', label:'Terms',             page:'terms'           },
-    ]},
-    { section:'Fees', items:[
-      { icon:'💰', label:'Fee Structures', page:'fee-structures' },
-      { icon:'💳', label:'Payments',       page:'payments'       },
-      { icon:'📊', label:'Reports',        page:'reports'        },
-    ]},
-    { section:'Admin', items:[
-      { icon:'👥', label:'Users', page:'users' },
-    ]},
-  ],
-  bursar: [
-    { section:'Main', items:[
-      { icon:'🏠', label:'Dashboard',       page:'dashboard'   },
-      { icon:'🎓', label:'Students',        page:'students'    },
-      { icon:'💳', label:'Record Payment',  page:'payments'    },
-      { icon:'📊', label:'Reports',         page:'reports'     },
-    ]},
-  ],
-  class_teacher: [
-    { section:'Main', items:[
-      { icon:'🏠', label:'Dashboard', page:'dashboard' },
-      { icon:'📚', label:'My Class',  page:'my-class'  },
-    ]},
-  ],
-};
-
-/* ──────────────────────── AUTH HANDLERS ─────────────────────────────── */
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-
-async function handleGoogleSignIn() {
-  const btn   = document.getElementById('google-btn');
-  const errEl = document.getElementById('google-signin-error');
-  errEl.classList.remove('show');
-
-  btn.disabled = true;
-  btn.innerHTML = '<div class="loading-spinner" style="border-color:rgba(0,0,0,.2);border-top-color:var(--blue)"></div> Signing in...';
-
-  try {
-    await auth.signInWithPopup(googleProvider);
-    // onAuthStateChanged handles the rest
-  } catch(e) {
-    const msgs = {
-      'auth/popup-closed-by-user':     'Sign-in cancelled. Please try again.',
-      'auth/popup-blocked':            'Popup blocked — allow popups for this site.',
-      'auth/account-exists-with-different-credential': 'Account already exists with a different sign-in method.',
-      'auth/network-request-failed':   'Network error. Check your connection.',
-      'auth/cancelled-popup-request':  'Only one sign-in window allowed at a time.',
-    };
-    errEl.textContent = msgs[e.code] || `Sign-in failed: ${e.message}`;
-    errEl.classList.add('show');
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 48 48" style="flex-shrink:0">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      <path fill="none" d="M0 0h48v48H0z"/>
-    </svg> Continue with Google`;
+// PWA Manifest with generated icons
+(async ()=>{
+  function genIcon(size){
+    const c=document.createElement('canvas');
+    c.width=c.height=size;
+    const x=c.getContext('2d');
+    const r=size*0.18;
+    x.fillStyle='#0f172a';
+    x.beginPath();x.roundRect(0,0,size,size,r);x.fill();
+    // Outer glow ring
+    x.strokeStyle='rgba(56,189,248,0.25)';x.lineWidth=size*0.03;
+    x.beginPath();x.roundRect(size*0.05,size*0.05,size*0.9,size*0.9,r*0.8);x.stroke();
+    // Accent circle
+    const g=x.createRadialGradient(size/2,size*0.42,0,size/2,size*0.42,size*0.3);
+    g.addColorStop(0,'#38bdf8');g.addColorStop(1,'#0284c7');
+    x.fillStyle=g;
+    x.beginPath();x.arc(size/2,size*0.42,size*0.28,0,Math.PI*2);x.fill();
+    // Letters SM
+    x.fillStyle='#0f172a';
+    x.font=`900 ${Math.round(size*0.26)}px Arial,sans-serif`;
+    x.textAlign='center';x.textBaseline='middle';
+    x.fillText('SM',size/2,size*0.43);
+    // Bottom label
+    x.fillStyle='#38bdf8';
+    x.font=`700 ${Math.round(size*0.09)}px Arial,sans-serif`;
+    x.fillText('SHOPMASTER',size/2,size*0.79);
+    return new Promise(res=>c.toBlob(b=>res(URL.createObjectURL(b)),'image/png'));
   }
+  const [ic192,ic512]=await Promise.all([genIcon(192),genIcon(512)]);
+  const m={
+    name:"ShopMaster Pro",
+    short_name:"ShopMaster",
+    description:"Kenya's Smart Shop Management System",
+    start_url:"./",
+    display:"standalone",
+    orientation:"portrait",
+    background_color:"#0f172a",
+    theme_color:"#0f172a",
+    lang:"en",
+    categories:["business","finance","productivity"],
+    icons:[
+      {src:ic192,sizes:"192x192",type:"image/png",purpose:"any maskable"},
+      {src:ic512,sizes:"512x512",type:"image/png",purpose:"any maskable"}
+    ]
+  };
+  const b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});
+  document.getElementById("pwaManifest").href=URL.createObjectURL(b);
+})();
+
+// ═══════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════
+let cUser=null,cShopId=null,cShop=null,saleMode='cash';
+let listeners=[];
+let ld={products:[],sales:[],debtors:[],expenses:[]};
+let auditData=null;
+
+// ═══════════════════════════════════════════════
+// SESSION PERSISTENCE (survives offline restarts)
+// ═══════════════════════════════════════════════
+const SM_SESSION_KEY = 'sm_session_v2';
+
+function saveSession(type, user, shopId, shopData){
+  try{
+    localStorage.setItem(SM_SESSION_KEY, JSON.stringify({
+      type, uid:user.uid, email:user.email,
+      shopId: shopId||null,
+      shopData: shopData||null,
+      savedAt: Date.now()
+    }));
+  }catch(e){}
+}
+function loadSession(){
+  try{ return JSON.parse(localStorage.getItem(SM_SESSION_KEY)||'null'); }
+  catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SM_SESSION_KEY); }catch(e){}
 }
 
-async function handleSignOut() {
-  await auth.signOut();
-  showToast('Signed out successfully.', 'info');
-}
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+auth.onAuthStateChanged(async user=>{
+  const setStatus = t => { const el=G('loadStatus'); if(el) el.textContent=t; };
 
-/* ──────────────────────── AUTH STATE OBSERVER ───────────────────────── */
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    showScreen('auth');
-    return;
-  }
-  App.currentUser = user;
-
-  try {
-    const userRef  = db.collection('users').doc(user.uid);
-    const userSnap = await userRef.get();
-
-    const isSuper    = user.email === App.SUPER_ADMIN;
-    const googleName = user.displayName || user.email.split('@')[0];
-    const googlePhoto= user.photoURL || null;
-
-    if (!userSnap.exists) {
-      /* ── First-ever Google login: create the Firestore user doc ── */
-      const newDoc = {
-        email:      user.email,
-        full_name:  googleName,
-        photo_url:  googlePhoto,
-        role:       isSuper ? 'super_admin' : null,
-        school_id:  null,
-        is_active:  true,
-        provider:   'google',
-        created_at: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-      await userRef.set(newDoc);
-      App.userDoc = { id: user.uid, ...newDoc };
-    } else {
-      App.userDoc = { id: userSnap.id, ...userSnap.data() };
-
-      /* ── Sync Google display name & photo on every login ── */
-      const updates = {};
-      if (googlePhoto && App.userDoc.photo_url !== googlePhoto) updates.photo_url = googlePhoto;
-      if (googleName  && App.userDoc.full_name !== googleName)  updates.full_name  = googleName;
-      if (Object.keys(updates).length) await userRef.update(updates);
-      Object.assign(App.userDoc, updates);
-
-      /* ── Super-admin override ── */
-      if (isSuper) App.userDoc.role = 'super_admin';
+  if(user){
+    cUser=user;
+    try{
+      if(user.uid===ADMIN_UID){
+        saveSession('admin', user);
+        G('adminEmail').textContent=user.email;
+        hideScreen('loadingScreen');
+        showScreen('adminPanel');
+        initAdmin();
+      } else {
+        setStatus(navigator.onLine ? 'Loading shop data…' : '📴 Restoring offline data…');
+        const shop = await findShop(user.email);
+        if(shop){
+          cShopId=shop.id; cShop=shop.data;
+          saveSession('shop', user, shop.id, shop.data);
+          hideScreen('loadingScreen');
+          showScreen('shopPanel');
+          initShop();
+        } else {
+          hideScreen('loadingScreen');
+          showScreen('loginScreen');
+          showErr('loginErr',`No shop found for ${user.email}. Contact admin.`);
+          auth.signOut();
+        }
+      }
+    } catch(err){
+      // Network error while fetching shop — try session cache
+      console.warn('Auth setup error (likely offline):', err.message);
+      setStatus('📴 Offline — loading from cache…');
+      const sess = loadSession();
+      if(sess && sess.uid===user.uid && sess.type==='shop' && sess.shopId){
+        cShopId = sess.shopId;
+        cShop   = sess.shopData;
+        hideScreen('loadingScreen');
+        showScreen('shopPanel');
+        initShop();
+        toast('📴 Offline mode — showing cached data');
+      } else if(sess && sess.uid===user.uid && sess.type==='admin'){
+        hideScreen('loadingScreen');
+        G('adminEmail').textContent = user.email;
+        showScreen('adminPanel');
+        initAdmin();
+        toast('📴 Offline mode');
+      } else {
+        hideScreen('loadingScreen');
+        showScreen('loginScreen');
+        showErr('loginErr','Offline and no cached session. Please connect to sign in.');
+      }
     }
-
-    /* ── Load school doc if user belongs to one ── */
-    if (App.userDoc.school_id) {
-      const schoolSnap = await db.collection('schools').doc(App.userDoc.school_id).get();
-      if (schoolSnap.exists) App.schoolDoc = { id: schoolSnap.id, ...schoolSnap.data() };
+  } else {
+    // No Firebase user — try session cache when offline
+    const sess = loadSession();
+    if(sess && !navigator.onLine){
+      setStatus('📴 Offline — restoring session…');
+      if(sess.type==='shop' && sess.shopId){
+        cShopId = sess.shopId;
+        cShop   = sess.shopData;
+        hideScreen('loadingScreen');
+        showScreen('shopPanel');
+        initShop();
+        toast('📴 Offline mode — showing cached data');
+        return;
+      } else if(sess.type==='admin'){
+        hideScreen('loadingScreen');
+        G('adminEmail').textContent = sess.email||'Administrator';
+        showScreen('adminPanel');
+        initAdmin();
+        toast('📴 Offline mode');
+        return;
+      }
     }
-
-    /* ── Block suspended school users ── */
-    if (App.schoolDoc?.status === 'suspended' && App.userDoc?.is_active === false) {
-      showScreen('revoked');
-      return;
-    }
-
-    /* ── New user with no role yet: show pending screen ── */
-    if (!App.userDoc.role && !isSuper) {
-      showPendingRoleScreen();
-      return;
-    }
-
-    initApp();
-  } catch(e) {
-    console.error('Firestore error:', e);
-    /* ── Graceful fallback so UI still loads in dev ── */
-    App.userDoc = {
-      email:     user.email,
-      full_name: user.displayName || user.email.split('@')[0],
-      photo_url: user.photoURL || null,
-      role:      user.email === App.SUPER_ADMIN ? 'super_admin' : 'school_admin',
-      school_id: 'SCH001', is_active: true, provider: 'google',
-    };
-    App.schoolDoc = MOCK.schools[0];
-    showToast('Running in demo mode — Firestore rules may need updating', 'info');
-    initApp();
+    stopAll(); cUser=null; cShopId=null; cShop=null;
+    hideScreen('loadingScreen');
+    showScreen('loginScreen');
   }
 });
 
-/* ──────────────────────── INIT APP ──────────────────────────────────── */
-function initApp() {
-  showScreen('app');
-  buildSidebar();
-  updateSidebarUser();
-  navigate('dashboard');
+async function doGoogleSignIn(){
+  const btn=G('gBtn'); btn.disabled=true;
+  G('loginErr').style.display='none';
+  G('loginSpin').style.display='flex';
+  try{
+    const p=new firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({prompt:'select_account'});
+    await auth.signInWithPopup(p);
+  }catch(e){
+    showErr('loginErr',e.message);
+    G('loginSpin').style.display='none';
+    btn.disabled=false;
+  }
 }
 
-function showScreen(screen) {
-  document.getElementById('auth-screen').style.display    = screen === 'auth'    ? '' : 'none';
-  document.getElementById('revoked-screen').style.display = screen === 'revoked' ? 'flex' : 'none';
-  const appEl = document.getElementById('app-shell');
-  appEl.classList.toggle('visible', screen === 'app');
+function doSignOut(){
+  if(confirm('Sign out?')){
+    clearSession();
+    auth.signOut();
+  }
 }
 
-/* Shown when a Google user has no role assigned yet */
-function showPendingRoleScreen() {
-  const u = App.currentUser;
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app-shell').classList.remove('visible');
-  document.getElementById('revoked-screen').style.display = 'flex';
-  document.getElementById('revoked-screen').innerHTML = `
-    <div class="revoked-screen">
-      ${u.photoURL ? `<img src="${u.photoURL}" style="width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.2);margin-bottom:16px" />` : '<div class="icon">⏳</div>'}
-      <h2>Account Pending Activation</h2>
-      <p style="margin-top:8px">Welcome, <strong style="color:#fff">${u.displayName || u.email}</strong>!<br/>
-      Your account has been created but no role has been assigned yet.<br/>
-      Please contact your school administrator to grant you access.</p>
-      <div style="margin-top:20px;padding:12px 20px;background:rgba(255,255,255,.07);border-radius:10px;font-size:.82rem;color:rgba(255,255,255,.55)">
-        Signed in as: ${u.email}
+// findShop: network first, then Firestore cache, then session cache
+async function findShop(email){
+  const q = db.collection('shops').where('shopkeeperEmail','==',email.toLowerCase()).limit(1);
+  // Try network (or Firestore offline cache automatically)
+  try{
+    const s = await q.get();
+    if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
+  }catch(netErr){
+    // Network failed — force cache-only source
+    try{
+      const s = await q.get({source:'cache'});
+      if(!s.empty){ const d=s.docs[0]; return{id:d.id,data:d.data()}; }
+    }catch(cacheErr){
+      // Not in Firestore cache either — let caller use localStorage session
+      throw netErr;
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// SCREEN/TAB HELPERS
+// ═══════════════════════════════════════════════
+function G(id){return document.getElementById(id)}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';s.classList.remove('on')});
+  const el=G(id); if(!el)return;
+  if(id==='loadingScreen'||id==='loginScreen') el.style.display='flex';
+  else el.style.display='block';
+  el.classList.add('on');
+}
+function hideScreen(id){const el=G(id);if(el){el.style.display='none';el.classList.remove('on')}}
+function setTxt(id,v){const e=G(id);if(e)e.textContent=v}
+function getV(id){const e=G(id);return e?e.value:''}
+
+function openModal(id){G(id).classList.add('open')}
+function closeModal(id){G(id).classList.remove('open')}
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+let _tt;
+function toast(msg,ms=3000){
+  const el=G('toast'); el.textContent=msg; el.style.display='block';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.style.display='none',ms);
+}
+
+function confirm2(title,msg,fn){
+  setTxt('cfm_t',title); setTxt('cfm_m',msg);
+  openModal('mConfirm');
+  G('cfm_btn').onclick=()=>{closeModal('mConfirm');fn();};
+}
+
+function showErr(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+function hideErr(id){const e=G(id);if(e)e.style.display='none'}
+function showOk(id,msg){const e=G(id);if(e){e.textContent=msg;e.style.display='block'}}
+
+function fKES(n){
+  if(isNaN(+n))return '0.00';
+  return (+n).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fDate(d){
+  if(!d)return '-';
+  const dt=d?.toDate?d.toDate():new Date(d);
+  return dt.toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'});
+}
+function esc(s){
+  if(!s)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function stopAll(){listeners.forEach(u=>u&&u());listeners=[];}
+
+function aTab(tab,btn){
+  document.querySelectorAll('#adminPanel .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#adminPanel .tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const p=G(`a-${tab}`); if(p)p.classList.add('active');
+  if(tab==='shops')loadAdminShops();
+  if(tab==='overview')initAdmin();
+}
+
+function sTab(tab,btn){
+  document.querySelectorAll('#shopPanel .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#shopPanel .tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const p=G(`s-${tab}`); if(p)p.classList.add('active');
+  if(tab==='profit')renderProfit();
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════
+function initAdmin(){
+  const cont=G('adminOverview');
+  const u=db.collection('shops').onSnapshot(async snap=>{
+    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered yet</p><small>Use Register Shop to add the first shop</small></div>';return;}
+    const rows=await Promise.all(snap.docs.map(async doc=>{
+      const s=doc.data(),id=doc.id;
+      const [sl,ex,db2]=await Promise.all([
+        db.collection(`shops/${id}/sales`).get(),
+        db.collection(`shops/${id}/expenses`).get(),
+        db.collection(`shops/${id}/debtors`).where('status','==','active').get()
+      ]);
+      let ts=0,tc=0,te=0,tu=0;
+      sl.forEach(d=>{ts+=d.data().totalSellingPrice||0;tc+=d.data().totalBuyingPrice||0;});
+      ex.forEach(d=>{te+=d.data().amount||0;});
+      db2.forEach(d=>{tu+=d.data().amount||0;});
+      const profit=ts-(tc+te);
+      return{s,profit,ts,te,tu};
+    }));
+    cont.innerHTML=rows.map(({s,profit,ts,te,tu})=>`
+      <div class="shop-perf">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:15px;font-weight:800">${esc(s.name||'Unnamed Shop')}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">📍 ${esc(s.location||'N/A')} &nbsp;|&nbsp; 👤 ${esc(s.shopkeeperName||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')}</div>
+          </div>
+          <span class="badge b-accent">${s.shopkeeperEmail?.split('@')[0]||''}</span>
+        </div>
+        <div class="perf-grid">
+          <div class="perf-cell"><div class="cv" style="color:var(--green)">KES ${fKES(ts)}</div><div class="ck">Sales</div></div>
+          <div class="perf-cell"><div class="cv" style="color:var(--purple)">KES ${fKES(te)}</div><div class="ck">Expenses</div></div>
+          <div class="perf-cell"><div class="cv" style="${profit>=0?'color:var(--green)':'color:var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</div><div class="ck">Profit</div></div>
+        </div>
+        ${tu>0?`<div class="alert alert-yellow" style="margin-top:8px;margin-bottom:0">⚠️ Unpaid debts: <b>KES ${fKES(tu)}</b></div>`:''}
+      </div>`).join('');
+  });
+  listeners.push(u);
+}
+
+function loadAdminShops(){
+  const cont=G('adminShops');
+  const u=db.collection('shops').onSnapshot(snap=>{
+    if(snap.empty){cont.innerHTML='<div class="empty"><div class="ico">🏪</div><p>No shops registered</p></div>';return;}
+    cont.innerHTML=snap.docs.map(doc=>{
+      const s=doc.data();
+      return`<div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:800;font-size:14px;margin-bottom:3px">${esc(s.name||'Unnamed')}</div>
+            <div style="font-size:12px;color:var(--text3)">📍 ${esc(s.location||'N/A')}</div>
+            <div style="font-size:12px;color:var(--text3)">👤 ${esc(s.shopkeeperName||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">📧 ${esc(s.shopkeeperEmail||'')} &nbsp;|&nbsp; 📱 +254${esc(s.shopkeeperPhone||'')}</div>
+          </div>
+          <button onclick="adminDelShop('${doc.id}','${esc(s.name)}')" class="btn btn-ghost btn-xs" style="color:var(--red);border-color:rgba(248,113,113,.3)">🗑️ Del</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+  listeners.push(u);
+}
+
+async function regShop(){
+  const name=getV('r_n').trim(),loc=getV('r_l').trim(),kn=getV('r_kn').trim();
+  const ph=getV('r_ph').trim(),em=getV('r_em').trim().toLowerCase();
+  hideErr('regErr'); G('regOk').style.display='none';
+  if(!name||!loc||!kn||!ph||!em){showErr('regErr','All fields are required');return;}
+  if(!em.endsWith('@gmail.com')){showErr('regErr','Email must be a Gmail address (@gmail.com)');return;}
+  const ex=await findShop(em);
+  if(ex){showErr('regErr','This Gmail is already registered to another shop');return;}
+  try{
+    await db.collection('shops').add({name,location:loc,shopkeeperName:kn,shopkeeperPhone:ph,shopkeeperEmail:em,createdAt:TS()});
+    showOk('regOk',`✅ "${name}" registered! ${kn} can now sign in with ${em}`);
+    ['r_n','r_l','r_kn','r_ph','r_em'].forEach(id=>G(id).value='');
+    toast('Shop registered!');
+  }catch(e){showErr('regErr',e.message);}
+}
+
+function adminDelShop(id,name){
+  confirm2(`Delete "${name}"?`,'All shop data (products, sales, debtors, expenses) will be permanently deleted!',async()=>{
+    try{
+      for(const col of['products','sales','debtors','expenses']){
+        const s=await db.collection(`shops/${id}/${col}`).get();
+        if(!s.empty){const b=db.batch();s.forEach(d=>b.delete(d.ref));await b.commit();}
+      }
+      await db.collection('shops').doc(id).delete();
+      toast('Shop deleted');
+    }catch(e){toast('Error: '+e.message);}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SHOP INIT
+// ═══════════════════════════════════════════════
+function initShop(){
+  setTxt('sh_name',cShop.name||'My Shop');
+  setTxt('sh_loc',cShop.location||'');
+  setTxt('d_sName',cShop.name||'My Shop');
+  setTxt('d_date',new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  G('e_date').value=new Date().toISOString().split('T')[0];
+  startListeners();
+}
+
+function startListeners(){
+  stopAll();
+
+  // Firestore onSnapshot works offline automatically when persistence is enabled.
+  // includeMetadataChanges lets us know when data is from cache vs server.
+  const snapOpts = {includeMetadataChanges: true};
+
+  const onErr = col => err => {
+    console.warn(`Listener error [${col}]:`, err.message);
+    // On offline error, try loading once from cache
+    db.collection(`shops/${cShopId}/${col}`).get({source:'cache'}).then(snap=>{
+      if(col==='products'){ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));renderStock();updateProdDrop();}
+      if(col==='sales'){ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));renderRecentSales();renderSalesSummary();}
+      if(col==='debtors'){ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));renderDebtors();}
+      if(col==='expenses'){ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExp();}
+      refreshDash();
+    }).catch(()=>{});
+  };
+
+  const u1=db.collection(`shops/${cShopId}/products`).orderBy('addedAt','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.products=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderStock();updateProdDrop();refreshDash();
+    }, onErr('products'));
+
+  const u2=db.collection(`shops/${cShopId}/sales`).orderBy('date','desc').limit(200)
+    .onSnapshot(snapOpts, snap=>{
+      ld.sales=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderRecentSales();renderSalesSummary();refreshDash();
+    }, onErr('sales'));
+
+  const u3=db.collection(`shops/${cShopId}/debtors`).orderBy('createdAt','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.debtors=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderDebtors();refreshDash();
+    }, onErr('debtors'));
+
+  const u4=db.collection(`shops/${cShopId}/expenses`).orderBy('date','desc')
+    .onSnapshot(snapOpts, snap=>{
+      ld.expenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderExp();refreshDash();
+    }, onErr('expenses'));
+
+  listeners.push(u1,u2,u3,u4);
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function refreshDash(){
+  const stockVal=ld.products.reduce((s,p)=>s+(p.quantity||0)*(p.sellingPrice||0),0);
+  const totSales=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const unpaid=active.reduce((s,d)=>s+(d.amount||0),0);
+  const totExp=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const cogs=ld.sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+  const profit=totSales-(cogs+totExp);
+  const snail=snailCount();
+
+  setTxt('d_stkVal',`KES ${fKES(stockVal)}`);
+  setTxt('d_sales',`KES ${fKES(totSales)}`);
+  setTxt('d_debts',`KES ${fKES(unpaid)}`);
+  const pe=G('d_profit'); pe.textContent=`KES ${fKES(profit)}`;
+  pe.style.color=profit>=0?'var(--green)':'var(--red)';
+  setTxt('d_pCount',ld.products.length);
+  setTxt('d_dCount',active.length);
+  setTxt('d_snailC',snail);
+  setTxt('d_expTotal',`KES ${fKES(totExp)}`);
+
+  let alerts='';
+  if(snail>0) alerts+=`<div class="alert alert-yellow">🐌 <b>${snail} product(s)</b> selling very slowly (≤ 1 unit in last 14 days)</div>`;
+  if(unpaid>0) alerts+=`<div class="alert alert-red">⚠️ <b>KES ${fKES(unpaid)}</b> in unpaid debts from ${active.length} debtor(s)</div>`;
+  if(profit<0) alerts+=`<div class="alert alert-red">📉 Running at a loss of <b>KES ${fKES(Math.abs(profit))}</b> — review expenses & pricing</div>`;
+  if(profit>0&&unpaid===0) alerts+=`<div class="alert alert-green">📈 Profitable! Net profit: <b>KES ${fKES(profit)}</b></div>`;
+  G('dashAlerts').innerHTML=alerts;
+}
+
+function snailCount(){
+  const twa=new Date(); twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{
+    const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);
+    if(d>=twa) sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);
+  });
+  return ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1).length;
+}
+
+// ═══════════════════════════════════════════════
+// STOCK
+// ═══════════════════════════════════════════════
+function renderStock(){
+  const c=G('stockContent');
+  if(!ld.products.length){c.innerHTML='<div class="empty"><div class="ico">📦</div><p>No products in stock</p><small>Add your first product above</small></div>';return;}
+  const twa=new Date(); twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
+  c.innerHTML=ld.products.map(p=>{
+    const snail=(p.quantity||0)>0&&(sp[p.id]||0)<=1;
+    const low=(p.quantity||0)<=2&&(p.quantity||0)>0;
+    const val=(p.quantity||0)*(p.sellingPrice||0);
+    const margin=(p.sellingPrice||0)-(p.buyingPrice||0);
+    return`<div class="prod-row${snail?' snail':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="prod-name">${esc(p.name)} ${snail?'<span class="snail-tag">🐌 Snailing</span>':''} ${low?'<span class="low-tag">⚠️ Low</span>':''}</div>
+        <div style="text-align:right">
+          <div class="mono" style="font-weight:800;color:var(--green);font-size:13px">KES ${fKES(val)}</div>
+          <div style="font-size:10px;color:var(--text3)">stock value</div>
+        </div>
       </div>
-      <button class="btn btn-ghost" style="margin-top:20px;color:#fff;border-color:rgba(255,255,255,.25)" onclick="handleSignOut()">Sign Out</button>
+      <div class="prod-meta">
+        <span>Buy: <b>KES ${fKES(p.buyingPrice)}</b></span>
+        <span>Sell: <b style="color:var(--green)">KES ${fKES(p.sellingPrice)}</b></span>
+        <span>Qty: <b style="color:${low?'var(--red)':'var(--accent)'}">${p.quantity||0}</b></span>
+        <span>Margin: <b style="color:${margin>0?'var(--green)':'var(--red)'}">KES ${fKES(margin)}</b></span>
+      </div>
+      <div class="prod-actions">
+        <button onclick="editQty('${p.id}','${esc(p.name)}',${p.quantity||0})" class="btn btn-ghost btn-xs" style="flex:1">✏️ Edit Qty</button>
+        <button onclick="delProd('${p.id}','${esc(p.name)}')" class="btn btn-xs" style="flex:1;background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3)">🗑️ Delete</button>
+      </div>
     </div>`;
+  }).join('');
 }
 
-/* ──────────────────────── SIDEBAR ───────────────────────────────────── */
-function buildSidebar() {
-  const role = App.role || 'school_admin';
-  const menus = NAV_MENUS[role] || NAV_MENUS.school_admin;
-  const nav = document.getElementById('nav-links');
-  nav.innerHTML = '';
+function addProd(){
+  const n=getV('p_n').trim(),b=parseFloat(getV('p_b')),s=parseFloat(getV('p_s')),q=parseInt(getV('p_q'));
+  hideErr('prodErr');
+  if(!n||isNaN(b)||isNaN(s)||isNaN(q)){showErr('prodErr','All fields required');return;}
+  if(b<=0||s<=0||q<=0){showErr('prodErr','All values must be greater than 0');return;}
+  db.collection(`shops/${cShopId}/products`).add({name:n,buyingPrice:b,sellingPrice:s,quantity:q,addedAt:TS(),lastSoldAt:null})
+    .then(()=>{closeModal('mAddProd');toast(`"${n}" added!`);['p_n','p_b','p_s','p_q'].forEach(id=>G(id).value='');})
+    .catch(e=>showErr('prodErr',e.message));
+}
 
-  menus.forEach(section => {
-    const secEl = document.createElement('div');
-    secEl.className = 'nav-section-label';
-    secEl.textContent = section.section;
-    nav.appendChild(secEl);
-    section.items.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'nav-item';
-      el.dataset.page = item.page;
-      el.innerHTML = `<span class="nav-icon">${item.icon}</span> ${item.label}`;
-      el.onclick = () => navigate(item.page);
-      nav.appendChild(el);
+function editQty(id,name,cur){
+  const nv=prompt(`Update quantity for "${name}":`,cur);
+  if(nv===null)return;
+  const q=parseInt(nv);
+  if(isNaN(q)||q<0){toast('Invalid quantity');return;}
+  db.collection(`shops/${cShopId}/products`).doc(id).update({quantity:q})
+    .then(()=>toast('Quantity updated ✓'))
+    .catch(e=>toast('Error: '+e.message));
+}
+
+function delProd(id,name){
+  confirm2(`Delete "${name}"?`,'This product will be removed from stock.',()=>{
+    db.collection(`shops/${cShopId}/products`).doc(id).delete()
+      .then(()=>toast('Product deleted'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SALES
+// ═══════════════════════════════════════════════
+function setSaleMode(m){
+  saleMode=m;
+  G('btnCash').className=`type-btn cash${m==='cash'?' sel':''}`;
+  G('btnDebt').className=`type-btn debt${m==='debt'?' sel':''}`;
+  G('debtFields').style.display=m==='debt'?'block':'none';
+}
+
+function updateProdDrop(){
+  const sel=G('s_prod'),prev=sel.value;
+  sel.innerHTML='<option value="">— Select product —</option>';
+  ld.products.filter(p=>(p.quantity||0)>0).forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id;
+    o.textContent=`${p.name}  (Qty: ${p.quantity} | KES ${fKES(p.sellingPrice)})`;
+    o.dataset.sell=p.sellingPrice;o.dataset.buy=p.buyingPrice;
+    o.dataset.qty=p.quantity;o.dataset.name=p.name;
+    sel.appendChild(o);
+  });
+  if(prev)sel.value=prev;
+  calcAmt();
+}
+
+function onProdChange(){calcAmt();}
+
+function calcAmt(){
+  const sel=G('s_prod'),q=parseInt(getV('s_qty'))||0;
+  const opt=sel.options[sel.selectedIndex];
+  if(sel.value&&q>0&&opt.dataset.sell){
+    G('s_amt').value=`KES ${fKES(parseFloat(opt.dataset.sell)*q)}`;
+  } else {G('s_amt').value='';}
+}
+
+async function recordSale(){
+  const sel=G('s_prod'),q=parseInt(getV('s_qty'));
+  hideErr('saleErr');
+  if(!sel.value||isNaN(q)||q<=0){showErr('saleErr','Select a product and enter valid quantity');return;}
+  const opt=sel.options[sel.selectedIndex];
+  const avail=parseInt(opt.dataset.qty);
+  if(q>avail){showErr('saleErr',`Only ${avail} units available in stock`);return;}
+  const pId=sel.value,pName=opt.dataset.name;
+  const sp=parseFloat(opt.dataset.sell),bp=parseFloat(opt.dataset.buy);
+  const isDebt=saleMode==='debt';
+  if(isDebt){
+    const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
+    if(!dn||!dp){showErr('saleErr','Enter debtor name and phone number');return;}
+    if(dp.length<9){showErr('saleErr','Phone must be 9 digits after +254');return;}
+  }
+  try{
+    const batch=db.batch();
+    const totS=sp*q,totB=bp*q;
+    const sRef=db.collection(`shops/${cShopId}/sales`).doc();
+    batch.set(sRef,{productId:pId,productName:pName,quantity:q,sellingPricePerUnit:sp,buyingPricePerUnit:bp,totalSellingPrice:totS,totalBuyingPrice:totB,isDebt,date:TS(),shopName:cShop.name});
+    batch.update(db.collection(`shops/${cShopId}/products`).doc(pId),{quantity:INC(-q),lastSoldAt:TS()});
+    await batch.commit();
+    if(isDebt){
+      const dn=getV('s_dName').trim(),dp=getV('s_dPhone').trim();
+      const phone=`+254${dp}`;
+      const msg=buildMsg(dn,pName,q,totS,cShop.name);
+      await db.collection(`shops/${cShopId}/debtors`).add({debtorName:dn,phone,productId:pId,productName:pName,quantity:q,amount:totS,status:'active',createdAt:TS(),paidAt:null,claimMessage:msg,shopName:cShop.name});
+    }
+    sel.value='';G('s_qty').value='';G('s_amt').value='';
+    G('s_dName').value='';G('s_dPhone').value='';
+    setSaleMode('cash');
+    toast(isDebt?'📝 Debt sale recorded':'✅ Sale recorded!');
+  }catch(e){showErr('saleErr',e.message);}
+}
+
+function buildMsg(name,product,qty,amount,shopName){
+  return `Dear ${name}, this is a friendly reminder from ${shopName} that you have an outstanding balance of KES ${fKES(amount)} for ${qty} unit(s) of ${product} purchased on credit. Kindly settle your account at your earliest convenience. Thank you for your business. — ${shopName}`;
+}
+
+function renderRecentSales(){
+  const c=G('recentSales');
+  if(!ld.sales.length){c.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No sales yet</p>';return;}
+  c.innerHTML=ld.sales.slice(0,30).map(s=>`
+    <div class="card card-sm" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:700">${esc(s.productName)}
+          ${s.isDebt?'<span class="badge b-red" style="margin-left:4px">DEBT</span>':'<span class="badge b-green" style="margin-left:4px">CASH</span>'}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Qty ${s.quantity} × KES ${fKES(s.sellingPricePerUnit)} &nbsp;|&nbsp; ${fDate(s.date)}</div>
+      </div>
+      <div class="mono" style="font-weight:800;color:var(--green);font-size:13px">KES ${fKES(s.totalSellingPrice)}</div>
+    </div>`).join('');
+}
+
+function renderSalesSummary(){
+  const c=G('salesSumContent');
+  const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const cashS=ld.sales.filter(s=>!s.isDebt).reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const debtS=ld.sales.filter(s=>s.isDebt).reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const unpaidD=ld.debtors.filter(d=>d.status==='active').reduce((s,d)=>s+(d.amount||0),0);
+  const paidD=ld.debtors.filter(d=>d.status==='paid').reduce((s,d)=>s+(d.amount||0),0);
+  let html=`
+    <div class="summary-line"><span style="color:var(--text2)">Total Revenue</span><span class="mono" style="font-weight:800;color:var(--green)">KES ${fKES(totS)}</span></div>
+    <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Cash Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(cashS)}</span></div>
+    <div class="summary-line"><span style="color:var(--text3);font-size:12px">↳ Debt Sales</span><span style="font-size:12px;color:var(--text2)">KES ${fKES(debtS)}</span></div>`;
+  if(unpaidD>0) html+=`<div class="alert alert-red" style="margin-top:8px;margin-bottom:0;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaidD)}</b></div>`;
+  if(paidD>0) html+=`<div class="alert alert-green" style="margin-top:4px;margin-bottom:0;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidD)}</b></div>`;
+  c.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════
+// DEBTORS
+// ═══════════════════════════════════════════════
+function renderDebtors(){
+  const c=G('debtorsContent');
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const paid=ld.debtors.filter(d=>d.status==='paid');
+  const totU=active.reduce((s,d)=>s+(d.amount||0),0);
+  setTxt('totalUnpaid',`KES ${fKES(totU)}`);
+  if(!ld.debtors.length){c.innerHTML='<div class="empty"><div class="ico">✅</div><p>No debtors!</p><small>All accounts are clear</small></div>';return;}
+  let html='';
+  if(active.length){
+    html+=`<div class="sec-hdr">Active Debts (${active.length})</div>`;
+    active.forEach(d=>{
+      const mEnc=encodeURIComponent(d.claimMessage||'');
+      html+=`<div class="card debt-active" style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:14px;font-weight:800">${esc(d.debtorName||'Unknown')}</div>
+            <div style="font-size:12px;color:var(--text3)">${esc(d.productName)} × ${d.quantity||0}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${fDate(d.createdAt)} &nbsp;|&nbsp; 📱 ${esc(d.phone)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="mono" style="font-size:20px;font-weight:800;color:var(--red)">KES ${fKES(d.amount)}</div>
+            <span class="badge b-red">UNPAID</span>
+          </div>
+        </div>
+        <div class="claim">${esc(d.claimMessage||'')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px">
+          <button onclick="sendWA('${esc(d.phone)}','${mEnc}')" class="btn-wa">📱 WA</button>
+          <button onclick="sendSMS('${esc(d.phone)}','${mEnc}')" class="btn-sms">💬 SMS</button>
+          <button onclick="payDebt('${d.id}',${d.amount},'${esc(d.debtorName)}')" class="btn btn-green btn-xs" style="font-size:11px">✅ Paid</button>
+          <button onclick="delDebt('${d.id}','${esc(d.debtorName)}')" class="btn btn-xs" style="background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3);font-size:11px">🗑️ Del</button>
+        </div>
+      </div>`;
     });
-  });
-
-  // Account always visible
-  const acctEl = document.createElement('div');
-  acctEl.innerHTML = `<div class="nav-section-label">Account</div>`;
-  const acctItem = document.createElement('div');
-  acctItem.className = 'nav-item';
-  acctItem.dataset.page = 'account';
-  acctItem.innerHTML = `<span class="nav-icon">⚙️</span> Account Settings`;
-  acctItem.onclick = () => navigate('account');
-  acctEl.appendChild(acctItem);
-  nav.appendChild(acctEl);
-
-  // School badge
-  const badge = document.getElementById('school-badge');
-  if (App.schoolDoc) {
-    badge.style.display = '';
-    document.getElementById('school-badge-name').textContent = App.schoolDoc.name;
-  } else {
-    badge.style.display = 'none';
   }
-}
-
-function updateSidebarUser() {
-  const name    = App.userDoc?.full_name || App.currentUser?.displayName || App.currentUser?.email || 'User';
-  const role    = App.role || '—';
-  const photo   = App.userDoc?.photo_url || App.currentUser?.photoURL || null;
-  const initials= name.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('').toUpperCase();
-
-  document.getElementById('sidebar-username').textContent = name;
-  document.getElementById('sidebar-role').textContent = role.replace(/_/g, ' ');
-
-  const avatarEl = document.getElementById('user-avatar-initials');
-  if (photo) {
-    avatarEl.innerHTML = `<img src="${photo}" alt="${name}" onerror="this.parentElement.textContent='${initials}'" />`;
-  } else {
-    avatarEl.textContent = initials;
-  }
-}
-
-function setActiveNav(page) {
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-}
-
-/* ──────────────────────── ROUTER ────────────────────────────────────── */
-const PAGE_TITLES = {
-  dashboard: 'Dashboard', schools: 'Schools', classes: 'Classes & Streams',
-  students: 'Students', terms: 'Terms', 'fee-structures': 'Fee Structures',
-  payments: 'Payments', reports: 'Reports', users: 'Users',
-  'my-class': 'My Class', account: 'Account Settings',
-};
-
-function navigate(page) {
-  App.currentPage = page;
-  document.getElementById('page-title').textContent = PAGE_TITLES[page] || 'Page';
-  setActiveNav(page);
-  closeSidebar();
-
-  const body = document.getElementById('page-body');
-  body.innerHTML = PAGES[page] ? PAGES[page]() : `<div class="empty-state"><div class="empty-icon">🚧</div><h4>Page Not Found</h4></div>`;
-}
-
-/* ──────────────────────── PAGES ─────────────────────────────────────── */
-const PAGES = {};
-
-/* ─── DASHBOARD ─── */
-PAGES.dashboard = () => {
-  if (App.role === 'super_admin')    return superAdminDashboard();
-  if (App.role === 'class_teacher') return classTeacherPage();
-  return schoolDashboard();
-};
-
-function superAdminDashboard() {
-  return `
-  <div class="page-hdr">
-    <div><h2>Platform Overview</h2><p>All schools on EduTrackFee</p></div>
-    <button class="btn btn-primary" onclick="navigate('schools')">➕ Add School</button>
-  </div>
-  <div class="stats-grid">
-    <div class="stat-card blue">  <span class="stat-icon">🏫</span><div class="stat-label">Total Schools</div><div class="stat-value">4</div><div class="stat-sub">All registered</div></div>
-    <div class="stat-card green"> <span class="stat-icon">✅</span><div class="stat-label">Active Schools</div><div class="stat-value">3</div><div class="stat-sub">Operational</div></div>
-    <div class="stat-card red">   <span class="stat-icon">⛔</span><div class="stat-label">Suspended</div><div class="stat-value">1</div><div class="stat-sub">Access revoked</div></div>
-    <div class="stat-card purple"><span class="stat-icon">👥</span><div class="stat-label">Total Users</div><div class="stat-value">16</div><div class="stat-sub">Across all schools</div></div>
-  </div>
-  <div class="card">
-    <div class="card-header"><h3>Registered Schools</h3><button class="btn btn-primary btn-sm" onclick="navigate('schools')">View All</button></div>
-    <div class="card-body">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
-        ${MOCK.schools.map(s=>`
-        <div class="school-card">
-          <div class="school-card-head">
-            <div style="display:flex;gap:12px;align-items:center">
-              <div class="school-avatar">🏫</div>
-              <div class="school-info"><h4>${s.name}</h4><p>${s.address}</p></div>
-            </div>
-            ${statusBadge(s.status)}
-          </div>
-          <div class="school-stats">
-            <div class="school-stat"><div class="sv">${s.max_students}</div><div class="sl">Capacity</div></div>
-            <div class="school-stat"><div class="sv">${capitalize(s.subscription_plan)}</div><div class="sl">Plan</div></div>
-            <div class="school-stat"><div class="sv">${s.currency}</div><div class="sl">Currency</div></div>
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>
-  </div>`;
-}
-
-function schoolDashboard() {
-  const school = App.schoolDoc || MOCK.schools[0];
-  const onboarded = true; // assume onboarded
-
-  return `
-  <div class="page-hdr">
-    <div><h2>Welcome back 👋</h2><p>${school.name} — Term 2 2024</p></div>
-    <button class="btn btn-primary" onclick="navigate('payments')">💳 Record Payment</button>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card blue">  <span class="stat-icon">🎓</span><div class="stat-label">Active Students</div><div class="stat-value">348</div><div class="stat-sub">+12 this term</div></div>
-    <div class="stat-card green"> <span class="stat-icon">💰</span><div class="stat-label">Total Collected</div><div class="stat-value">KES 4.2M</div><div class="stat-sub">This term</div></div>
-    <div class="stat-card amber"> <span class="stat-icon">⏳</span><div class="stat-label">Outstanding</div><div class="stat-value">KES 1.8M</div><div class="stat-sub">Pending collection</div></div>
-    <div class="stat-card purple"><span class="stat-icon">📈</span><div class="stat-label">Collection Rate</div><div class="stat-value">70%</div><div class="stat-sub">↑ 8% vs last term</div></div>
-  </div>
-
-  <div class="main-grid">
-    <div style="display:flex;flex-direction:column;gap:20px">
-      <!-- Monthly Collections Chart -->
-      <div class="card">
-        <div class="card-header"><h3>Monthly Collections</h3><span class="badge badge-blue">2024</span></div>
-        <div class="card-body">
-          <div class="chart-bar-wrap">
-            ${[['Jan','1,850,000',85],['Feb','980,000',45],['Mar','1,250,000',58],['Apr','2,100,000',97],['May','1,450,000',67],['Jun','760,000',35]].map(([m,v,p])=>`
-            <div class="chart-bar-row">
-              <div class="chart-bar-label">${m}</div>
-              <div class="chart-bar-outer"><div class="chart-bar-inner" style="width:${p}%"></div></div>
-              <div class="chart-bar-val">KES ${v}</div>
-            </div>`).join('')}
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Payments -->
-      <div class="card">
-        <div class="card-header"><h3>Recent Payments</h3><button class="btn btn-ghost btn-sm" onclick="navigate('payments')">View All</button></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Student</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Status</th></tr></thead>
-            <tbody>
-              ${MOCK.payments.map(p=>`<tr>
-                <td><span class="font-semibold">${p.student_name}</span></td>
-                <td>${p.class}</td>
-                <td>KES ${p.amount.toLocaleString()}</td>
-                <td>${formatMethod(p.method)}</td>
-                <td><span style="font-family:monospace;font-size:.78rem;color:var(--text-3)">${p.receipt}</span></td>
-                <td>${payStatusBadge(p.status)}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Panel -->
-    <div style="display:flex;flex-direction:column;gap:20px">
-      <!-- Fee Status Summary -->
-      <div class="card">
-        <div class="card-header"><h3>Fee Status</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
-          ${[['Fully Paid','green',145,42],['Partial','amber',112,32],['Unpaid','red',74,21],['Waived','purple',17,5]].map(([l,c,n,p])=>`
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-              <div class="badge badge-${c}">${l}</div>
-              <span class="text-sm font-semibold">${n} <span class="text-muted">(${p}%)</span></span>
-            </div>
-            <div class="progress-wrap"><div class="progress-bar ${c}" style="width:${p}%"></div></div>
-          </div>`).join('')}
-        </div>
-      </div>
-
-      <!-- Current Term -->
-      <div class="card">
-        <div class="card-header"><h3>Current Term</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-          <div><div class="text-xs text-muted">Term</div><div class="font-semibold">Term 2 2024</div></div>
-          <div><div class="text-xs text-muted">Period</div><div class="font-semibold" style="font-size:.85rem">6 May — 2 Aug 2024</div></div>
-          <div><div class="text-xs text-muted">Status</div>${statusBadge('active')}</div>
-          <div class="divider"></div>
-          <button class="btn btn-ghost btn-sm btn-full" onclick="navigate('terms')">📅 Manage Terms</button>
-        </div>
-      </div>
-
-      <!-- Onboarding -->
-      ${!onboarded ? `
-      <div class="card">
-        <div class="card-header"><h3>🚀 Setup Checklist</h3></div>
-        <div class="card-body" style="padding-top:4px">
-          <div class="onboard-step">
-            <div class="step-circle done">✓</div>
-            <div class="step-text"><h4>Create Classes</h4><p>Streams configured</p></div>
-          </div>
-          <div class="onboard-step">
-            <div class="step-circle done">✓</div>
-            <div class="step-text"><h4>Set Up Term</h4><p>Term 2 2024 active</p></div>
-          </div>
-          <div class="onboard-step">
-            <div class="step-circle pending">3</div>
-            <div class="step-text"><h4>Add Students</h4><p>Import or add students</p></div>
-          </div>
-          <div class="onboard-step">
-            <div class="step-circle locked">4</div>
-            <div class="step-text"><h4>Create Fee Structures</h4><p>Set fee amounts per class</p></div>
-          </div>
-        </div>
-      </div>` : ''}
-    </div>
-  </div>`;
-}
-
-/* ─── SCHOOLS (super_admin) ─── */
-PAGES.schools = () => `
-  <div class="page-hdr">
-    <div><h2>Schools</h2><p>Manage all registered schools on the platform</p></div>
-    <button class="btn btn-primary" onclick="openAddSchoolModal()">➕ Add School</button>
-  </div>
-  <div class="mb-4" style="display:flex;gap:10px;flex-wrap:wrap">
-    <div class="search-bar" style="flex:1;min-width:200px"><span>🔍</span><input placeholder="Search schools..." /></div>
-    <div class="select-wrap" style="min-width:140px"><select><option>All Status</option><option>Active</option><option>Suspended</option></select></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-    ${MOCK.schools.map(s=>`
-    <div class="school-card">
-      <div class="school-card-head">
-        <div style="display:flex;gap:12px;align-items:center">
-          <div class="school-avatar">🏫</div>
-          <div class="school-info">
-            <h4>${s.name}</h4>
-            <p>${s.address}</p>
-          </div>
-        </div>
-        ${statusBadge(s.status)}
-      </div>
-      <div class="text-sm" style="color:var(--text-2)">${s.email}</div>
-      <div class="school-stats">
-        <div class="school-stat"><div class="sv">${s.max_students}</div><div class="sl">Capacity</div></div>
-        <div class="school-stat"><div class="sv">${capitalize(s.subscription_plan)}</div><div class="sl">Plan</div></div>
-        <div class="school-stat"><div class="sv">247</div><div class="sl">Students</div></div>
-      </div>
-      <div class="school-actions">
-        <button class="btn btn-ghost btn-sm">✏️ Edit</button>
-        ${s.status==='active'
-          ? `<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:none">⏸ Suspend</button>`
-          : `<button class="btn btn-sm" style="background:var(--green-bg);color:var(--green);border:none">▶ Activate</button>`}
-        <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:none">🗑 Delete</button>
-      </div>
-    </div>`).join('')}
-  </div>`;
-
-/* ─── STUDENTS ─── */
-PAGES.students = () => `
-  <div class="page-hdr">
-    <div><h2>Students</h2><p>All enrolled students — Term 2 2024</p></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm">⬆️ Import CSV</button>
-      <button class="btn btn-primary" onclick="openAddStudentModal()">➕ Add Student</button>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-header" style="flex-wrap:wrap;gap:12px">
-      <div class="search-bar" style="flex:1;min-width:200px"><span>🔍</span><input placeholder="Search by name or admission number..." /></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <div class="select-wrap"><select><option>All Classes</option>${MOCK.classes.map(c=>`<option>${c.full_name}</option>`).join('')}</select></div>
-        <div class="select-wrap"><select><option>All Status</option><option>Active</option><option>Inactive</option></select></div>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Adm. No</th><th>Student</th><th>Class</th><th>Parent</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${MOCK.students.map((s,i)=>`<tr>
-            <td class="text-muted text-sm">${i+1}</td>
-            <td><span style="font-family:monospace;font-size:.8rem">${s.student_id}</span></td>
-            <td>
-              <div style="display:flex;align-items:center;gap:9px">
-                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue-pale),var(--blue-lt));display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--blue);flex-shrink:0">${s.first_name[0]}</div>
-                <span class="font-semibold">${s.first_name} ${s.last_name}</span>
-              </div>
-            </td>
-            <td>${s.class_name}</td>
-            <td>${s.parent_name}</td>
-            <td style="font-family:monospace;font-size:.8rem">${s.parent_phone}</td>
-            <td>${statusBadge(s.status)}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-ghost btn-sm">💰 Fees</button>
-                <button class="btn btn-ghost btn-sm">✏️</button>
-              </div>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)">
-      <span class="text-sm text-muted">Showing 5 of 348 students</span>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm">← Prev</button>
-        <button class="btn btn-primary btn-sm">1</button>
-        <button class="btn btn-ghost btn-sm">2</button>
-        <button class="btn btn-ghost btn-sm">Next →</button>
-      </div>
-    </div>
-  </div>`;
-
-/* ─── CLASSES & STREAMS ─── */
-PAGES.classes = () => `
-  <div class="page-hdr">
-    <div><h2>Classes & Streams</h2><p>Manage class groups and assign teachers</p></div>
-    <button class="btn btn-primary">➕ Add Stream</button>
-  </div>
-  <div class="card">
-    <div class="card-header"><h3>All Streams (${MOCK.classes.length})</h3></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Class</th><th>Stream</th><th>Full Name</th><th>Class Teacher</th><th>Students</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${MOCK.classes.map(c=>`<tr>
-            <td class="font-semibold">${c.class_name}</td>
-            <td><span class="badge badge-blue">${c.stream_name}</span></td>
-            <td>${c.full_name}</td>
-            <td style="font-size:.82rem;color:var(--text-2)">${c.class_teacher_email}</td>
-            <td>62</td>
-            <td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm">✏️ Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--red)">🗑</button></div></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-
-/* ─── TERMS ─── */
-PAGES.terms = () => `
-  <div class="page-hdr">
-    <div><h2>Terms</h2><p>Manage academic terms and their status</p></div>
-    <button class="btn btn-primary">➕ New Term</button>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:14px">
-    ${MOCK.terms.map(t=>`
-    <div class="card" style="border-left:3px solid ${t.is_current ? 'var(--blue)' : 'var(--border)'}">
-      <div class="card-body">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                <h3 style="margin:0">${t.name}</h3>
-                ${t.is_current ? '<span class="badge badge-blue">Current</span>' : ''}
-              </div>
-              <div class="text-sm text-muted">${t.start_date} → ${t.end_date} · Academic Year ${t.academic_year}</div>
-            </div>
-            ${termStatusBadge(t.status)}
-          </div>
-          <div style="display:flex;gap:8px">
-            ${!t.is_current && t.status !== 'closed' ? `<button class="btn btn-ghost btn-sm">Set Current</button>` : ''}
-            <button class="btn btn-ghost btn-sm">✏️ Edit</button>
-            ${t.status === 'active' ? `<button class="btn btn-ghost btn-sm" style="color:var(--gray)">Close Term</button>` : ''}
-          </div>
-        </div>
-      </div>
-    </div>`).join('')}
-  </div>`;
-
-/* ─── FEE STRUCTURES ─── */
-PAGES['fee-structures'] = () => `
-  <div class="page-hdr">
-    <div><h2>Fee Structures</h2><p>Define fee items per term and class</p></div>
-    <button class="btn btn-primary">➕ New Fee Item</button>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn active">All Fees</button>
-    <button class="tab-btn">Term 1 2024</button>
-    <button class="tab-btn">Term 2 2024</button>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h3>Fee Items (${MOCK.feeStructures.length})</h3>
-      <button class="btn btn-ghost btn-sm">👥 Assign to Students</button>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Fee Name</th><th>Term</th><th>Class</th><th>Type</th><th>Amount (KES)</th><th>Due Date</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${MOCK.feeStructures.map(f=>`<tr>
-            <td class="font-semibold">${f.fee_name}</td>
-            <td>${f.term}</td>
-            <td>${f.class_name === 'all' ? '<span class="badge badge-sky">All Classes</span>' : f.class_name}</td>
-            <td>${f.fee_type==='mandatory'?'<span class="badge badge-red">Mandatory</span>':'<span class="badge badge-gray">Optional</span>'}</td>
-            <td class="font-semibold">KES ${f.amount.toLocaleString()}</td>
-            <td class="text-sm text-muted">${f.due_date}</td>
-            <td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm">✏️</button><button class="btn btn-ghost btn-sm" style="color:var(--red)">🗑</button></div></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-
-/* ─── PAYMENTS ─── */
-PAGES.payments = () => `
-  <div class="page-hdr">
-    <div><h2>Payments</h2><p>Record and manage fee payments</p></div>
-    <button class="btn btn-primary" onclick="openRecordPaymentModal()">💳 Record Payment</button>
-  </div>
-
-  <div class="stats-grid" style="margin-bottom:20px">
-    <div class="stat-card green"><span class="stat-icon">💰</span><div class="stat-label">Collected Today</div><div class="stat-value">KES 47,500</div></div>
-    <div class="stat-card blue"> <span class="stat-icon">📋</span><div class="stat-label">This Week</div><div class="stat-value">KES 214,000</div></div>
-    <div class="stat-card amber"><span class="stat-icon">📅</span><div class="stat-label">This Month</div><div class="stat-value">KES 1.2M</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-header" style="flex-wrap:wrap;gap:10px">
-      <div class="search-bar" style="flex:1;min-width:200px"><span>🔍</span><input placeholder="Search by student, receipt..." /></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <div class="select-wrap"><select><option>All Methods</option><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option></select></div>
-        <button class="btn btn-ghost btn-sm">⬇️ Export</button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Receipt</th><th>Student</th><th>Class</th><th>Fee Item</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${MOCK.payments.map(p=>`<tr>
-            <td><span style="font-family:monospace;font-size:.78rem;color:var(--blue)">${p.receipt}</span></td>
-            <td class="font-semibold">${p.student_name}</td>
-            <td>${p.class}</td>
-            <td>${p.fee}</td>
-            <td class="font-semibold">KES ${p.amount.toLocaleString()}</td>
-            <td>${formatMethod(p.method)}</td>
-            <td class="text-sm text-muted">${p.date}</td>
-            <td>${payStatusBadge(p.status)}</td>
-            <td><button class="btn btn-ghost btn-sm">🧾 Receipt</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-
-/* ─── REPORTS ─── */
-PAGES.reports = () => `
-  <div class="page-hdr">
-    <div><h2>Reports</h2><p>Financial analytics and collection summaries</p></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm">⬇️ PDF Export</button>
-      <button class="btn btn-ghost btn-sm">📊 Excel Export</button>
-    </div>
-  </div>
-
-  <div class="stats-grid mb-6">
-    <div class="stat-card blue">  <span class="stat-icon">💰</span><div class="stat-label">Total Expected</div><div class="stat-value">KES 6.2M</div></div>
-    <div class="stat-card green"> <span class="stat-icon">✅</span><div class="stat-label">Total Collected</div><div class="stat-value">KES 4.35M</div></div>
-    <div class="stat-card red">   <span class="stat-icon">⚠️</span><div class="stat-label">Outstanding</div><div class="stat-value">KES 1.85M</div></div>
-    <div class="stat-card purple"><span class="stat-icon">📈</span><div class="stat-label">Collection Rate</div><div class="stat-value">70.2%</div></div>
-  </div>
-
-  <div class="two-col" style="margin-bottom:20px">
-    <div class="card">
-      <div class="card-header"><h3>Collection by Class</h3></div>
-      <div class="card-body">
-        <div class="chart-bar-wrap">
-          ${[['Grade 7A',920000,92],['Grade 7B',880000,88],['Grade 8A',760000,76],['Grade 8B',680000,68],['Grade 9C',540000,54]].map(([c,v,p])=>`
-          <div class="chart-bar-row">
-            <div class="chart-bar-label" style="width:72px;font-size:.75rem">${c}</div>
-            <div class="chart-bar-outer"><div class="chart-bar-inner" style="width:${p}%"></div></div>
-            <div class="chart-bar-val">KES ${(v/1000).toFixed(0)}K</div>
-          </div>`).join('')}
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header"><h3>Payment Methods Breakdown</h3></div>
-      <div class="card-body">
-        <div style="display:flex;flex-direction:column;gap:14px">
-          ${[['Mobile Money','📱','green',48],['Bank Transfer','🏦','blue',32],['Cash','💵','amber',15],['Cheque','📝','gray',5]].map(([l,e,c,p])=>`
-          <div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-              <span class="text-sm">${e} ${l}</span>
-              <span class="font-semibold text-sm">${p}%</span>
-            </div>
-            <div class="progress-wrap"><div class="progress-bar ${c}" style="width:${p}%"></div></div>
-          </div>`).join('')}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><h3>Fee Status by Class</h3></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Class</th><th>Students</th><th>Fully Paid</th><th>Partial</th><th>Unpaid</th><th>Waived</th><th>Collection Rate</th></tr></thead>
-        <tbody>
-          ${[
-            ['Grade 7A',70,52,12,5,1,'91%'],['Grade 7B',68,48,14,4,2,'90%'],
-            ['Grade 8A',74,41,20,11,2,'82%'],['Grade 8B',72,33,22,16,1,'76%'],
-            ['Grade 9C',64,25,24,14,1,'76%'],
-          ].map(([c,s,p,pt,u,w,rate])=>`<tr>
-            <td class="font-semibold">${c}</td><td>${s}</td>
-            <td><span class="badge badge-green">${p}</span></td>
-            <td><span class="badge badge-amber">${pt}</span></td>
-            <td><span class="badge badge-red">${u}</span></td>
-            <td><span class="badge badge-purple">${w}</span></td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div class="progress-wrap" style="width:80px"><div class="progress-bar blue" style="width:${rate}"></div></div>
-                <span class="font-semibold text-sm">${rate}</span>
-              </div>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-
-/* ─── USERS ─── */
-PAGES.users = () => `
-  <div class="page-hdr">
-    <div><h2>Users</h2><p>Manage platform users and their roles</p></div>
-    <button class="btn btn-primary">✉️ Invite User</button>
-  </div>
-  <div class="card">
-    <div class="card-header">
-      <div class="search-bar" style="min-width:240px"><span>🔍</span><input placeholder="Search users..." /></div>
-      <div class="select-wrap"><select><option>All Roles</option><option>School Admin</option><option>Bursar</option><option>Class Teacher</option></select></div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${MOCK.users.map(u=>`<tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:9px">
-                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;flex-shrink:0">${u.full_name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
-                <span class="font-semibold">${u.full_name}</span>
-              </div>
-            </td>
-            <td style="font-size:.82rem;color:var(--text-2)">${u.email}</td>
-            <td><span class="badge badge-blue">${u.role.replace('_',' ')}</span></td>
-            <td>${u.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-ghost btn-sm">✏️ Edit</button>
-                ${u.is_active ? `<button class="btn btn-ghost btn-sm" style="color:var(--amber)">⏸ Suspend</button>` : `<button class="btn btn-ghost btn-sm" style="color:var(--green)">▶ Activate</button>`}
-              </div>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-
-/* ─── MY CLASS (Class Teacher) ─── */
-PAGES['my-class'] = classTeacherPage;
-function classTeacherPage() {
-  const myClass = 'Grade 7A';
-  const myStudents = MOCK.students.filter(s => s.class_name === myClass);
-  return `
-  <div class="page-hdr">
-    <div><h2>My Class — ${myClass}</h2><p>Fee status for your students</p></div>
-  </div>
-
-  <div class="stats-grid mb-6">
-    <div class="stat-card blue">  <span class="stat-icon">👥</span><div class="stat-label">Total Students</div><div class="stat-value">${myStudents.length}</div></div>
-    <div class="stat-card green"> <span class="stat-icon">✅</span><div class="stat-label">Paid</div><div class="stat-value">1</div></div>
-    <div class="stat-card amber"> <span class="stat-icon">⏳</span><div class="stat-label">Partial</div><div class="stat-value">1</div></div>
-    <div class="stat-card red">   <span class="stat-icon">❌</span><div class="stat-label">Unpaid</div><div class="stat-value">0</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-header"><h3>Students — ${myClass}</h3></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Student</th><th>Adm. No</th><th>Fee Status</th><th>Parent</th><th>Phone</th><th>SMS Reminder</th></tr></thead>
-        <tbody>
-          ${myStudents.map(s=>{
-            const pmt = MOCK.payments.find(p=>p.student_id===s.id);
-            const status = pmt ? pmt.status : 'unpaid';
-            return `<tr>
-              <td class="font-semibold">${s.first_name} ${s.last_name}</td>
-              <td style="font-family:monospace;font-size:.8rem">${s.student_id}</td>
-              <td>${payStatusBadge(status)}</td>
-              <td>${s.parent_name}</td>
-              <td style="font-family:monospace;font-size:.8rem">${s.parent_phone}</td>
-              <td>
-                <a href="sms:${s.parent_phone}?body=Dear ${s.parent_name}, your child ${s.first_name} has an outstanding school fee balance. Please settle at the earliest. Thank you. - ${myClass} Teacher"
-                   class="btn btn-ghost btn-sm">📱 Send SMS</a>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-}
-
-/* ─── ACCOUNT SETTINGS ─── */
-PAGES.account = () => {
-  const u       = App.userDoc || {};
-  const name    = u.full_name  || App.currentUser?.displayName || '';
-  const email   = App.currentUser?.email || '';
-  const photo   = u.photo_url  || App.currentUser?.photoURL || null;
-  const initials= name.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('').toUpperCase() || '?';
-  const school  = App.schoolDoc;
-  const joinDate= u.created_at?.toDate ? u.created_at.toDate().toLocaleDateString('en-KE',{year:'numeric',month:'long',day:'numeric'}) : 'N/A';
-
-  return `
-  <div class="page-hdr">
-    <div><h2>Account Settings</h2><p>Your profile is managed through Google</p></div>
-  </div>
-  <div class="two-col">
-
-    <!-- Left: Profile card -->
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="card-header"><h3>Profile</h3></div>
-        <div class="card-body">
-
-          <!-- Avatar + name row -->
-          <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border)">
-            <div style="position:relative;flex-shrink:0">
-              ${photo
-                ? `<img src="${photo}" alt="${name}" style="width:72px;height:72px;border-radius:50%;border:3px solid var(--border);object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-                   <div style="display:none;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7C3AED);align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff">${initials}</div>`
-                : `<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff">${initials}</div>`}
-              <!-- Google badge -->
-              <div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--border);display:flex;align-items:center;justify-content:center" title="Signed in with Google">
-                <svg width="13" height="13" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-              </div>
-            </div>
-            <div style="min-width:0">
-              <div style="font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:3px">${name}</div>
-              <div style="font-size:.82rem;color:var(--text-3);margin-bottom:8px">${email}</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <span class="badge badge-blue">${(u.role||'no role').replace(/_/g,' ')}</span>
-                <span class="badge badge-gray" style="font-size:.68rem;gap:4px">
-                  <svg width="9" height="9" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-                  Google Account
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Editable display name -->
-          <div class="form-group">
-            <label>Display Name</label>
-            <input type="text" id="acc-name" value="${name}" placeholder="Your full name" />
-            <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">This updates your name in EduTrackFee. Your Google account name is unchanged.</div>
-          </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" value="${email}" disabled style="opacity:.55;cursor:not-allowed;background:var(--bg)" />
-            <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">Email is managed by your Google account and cannot be changed here.</div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="updateProfile()">💾 Save Display Name</button>
-        </div>
-      </div>
-
-      <!-- Google notice -->
-      <div style="padding:14px 16px;background:var(--blue-pale);border:1px solid #BFDBFE;border-radius:10px;display:flex;gap:12px;align-items:flex-start">
-        <div style="font-size:18px;flex-shrink:0;margin-top:1px">ℹ️</div>
+  if(paid.length){
+    html+=`<div class="sec-hdr">Settled Debts (${paid.length})</div>`;
+    paid.forEach(d=>{
+      html+=`<div class="card debt-paid" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:.82rem;font-weight:600;color:var(--blue);margin-bottom:3px">Google Sign-In Active</div>
-          <div style="font-size:.78rem;color:#1D4ED8;line-height:1.5">Your account uses Google for authentication. To update your password, profile photo, or email, visit <a href="https://myaccount.google.com" target="_blank" style="text-decoration:underline;font-weight:600">myaccount.google.com</a>. Changes there will sync here on your next sign-in.</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text2)">${esc(d.debtorName||'')}</div>
+          <div style="font-size:11px;color:var(--text3)">${esc(d.productName)} × ${d.quantity||0}</div>
+          <div style="font-size:11px;color:var(--text3)">Paid: ${fDate(d.paidAt)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="mono" style="font-size:14px;font-weight:700;color:var(--green)">KES ${fKES(d.amount)}</div>
+          <span class="badge b-green">PAID</span>
+        </div>
+      </div>`;
+    });
+  }
+  c.innerHTML=html;
+}
+
+function payDebt(id,amount,name){
+  confirm2('Mark as Paid',`Record payment of KES ${fKES(amount)} from ${name}?`,()=>{
+    db.collection(`shops/${cShopId}/debtors`).doc(id).update({status:'paid',paidAt:TS()})
+      .then(()=>toast(`✅ Payment from ${name} recorded`))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function delDebt(id,name){
+  confirm2('Delete Debtor',`Remove ${name} from debtors list?`,()=>{
+    db.collection(`shops/${cShopId}/debtors`).doc(id).delete()
+      .then(()=>toast('Debtor removed'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function sendWA(phone,msgEnc){
+  window.open(`https://wa.me/${phone.replace('+','')}?text=${msgEnc}`,'_blank');
+}
+function sendSMS(phone,msgEnc){
+  window.location.href=`sms:${phone}?body=${msgEnc}`;
+}
+
+// ═══════════════════════════════════════════════
+// EXPENSES
+// ═══════════════════════════════════════════════
+function onExpCat(){G('e_otherF').style.display=getV('e_cat')==='other'?'block':'none';}
+
+function addExp(){
+  const cat=getV('e_cat'),amt=parseFloat(getV('e_amt')),date=getV('e_date'),other=getV('e_other').trim();
+  hideErr('expErr');
+  if(cat==='other'&&!other){showErr('expErr','Please specify the expense');return;}
+  if(isNaN(amt)||amt<=0){showErr('expErr','Enter valid amount');return;}
+  if(!date){showErr('expErr','Select date');return;}
+  const desc=cat==='other'?other:cat.charAt(0).toUpperCase()+cat.slice(1);
+  db.collection(`shops/${cShopId}/expenses`).add({category:cat,description:desc,amount:amt,date,createdAt:TS(),shopName:cShop.name})
+    .then(()=>{closeModal('mAddExp');toast('Expense added!');G('e_amt').value='';G('e_other').value='';})
+    .catch(e=>showErr('expErr',e.message));
+}
+
+function renderExp(){
+  const c=G('expContent');
+  const tot=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  setTxt('totalExp',`KES ${fKES(tot)}`);
+  if(!ld.expenses.length){c.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">No expenses recorded</p>';return;}
+  const ico={salary:'👤',transport:'🚗',marketing:'📢',other:'📝'};
+  c.innerHTML=ld.expenses.map(e=>`
+    <div class="card card-sm" style="margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:700">${ico[e.category]||'📝'} ${esc(e.description)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${e.date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="mono" style="font-weight:800;color:var(--purple)">KES ${fKES(e.amount)}</span>
+        <button onclick="delExp('${e.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function delExp(id){
+  confirm2('Delete Expense','Remove this expense record?',()=>{
+    db.collection(`shops/${cShopId}/expenses`).doc(id).delete()
+      .then(()=>toast('Expense deleted'))
+      .catch(e=>toast('Error: '+e.message));
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PROFIT
+// ═══════════════════════════════════════════════
+function renderProfit(){
+  const c=G('profitContent');
+  const totS=ld.sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+  const cogs=ld.sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+  const totE=ld.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const profit=totS-(cogs+totE);
+  const stkVal=ld.products.reduce((s,p)=>s+(p.quantity||0)*(p.sellingPrice||0),0);
+  const active=ld.debtors.filter(d=>d.status==='active');
+  const paid=ld.debtors.filter(d=>d.status==='paid');
+  const unpaid=active.reduce((s,d)=>s+(d.amount||0),0);
+  const paidAmt=paid.reduce((s,d)=>s+(d.amount||0),0);
+  const expByCat={};
+  ld.expenses.forEach(e=>{expByCat[e.description]=(expByCat[e.description]||0)+e.amount;});
+  // Snailing products
+  const twa=new Date();twa.setDate(twa.getDate()-14);
+  const sp={};
+  ld.sales.forEach(s=>{const d=s.date?.toDate?s.date.toDate():new Date(s.date||0);if(d>=twa)sp[s.productId]=(sp[s.productId]||0)+(s.quantity||1);});
+  const snailProds=ld.products.filter(p=>(p.quantity||0)>0&&(sp[p.id]||0)<=1);
+
+  c.innerHTML=`
+    <!-- Profit Big -->
+    <div class="profit-big">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">${esc(cShop?.name||'')} — Net Profit</div>
+      <div class="num" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</div>
+      <div style="font-size:12px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'📈 Shop is profitable':'📉 Running at a loss'}</div>
+    </div>
+
+    <!-- SALES -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➕ SALES</div>
+      <div class="formula-row"><span style="color:var(--text2)">Total Revenue (Cash + Debt)</span><span class="mono" style="font-weight:800;color:var(--green)">KES ${fKES(totS)}</span></div>
+      ${unpaid>0?`<div class="alert alert-red" style="margin-top:8px;font-size:11px">⚠️ Includes unpaid debt(s) of <b>KES ${fKES(unpaid)}</b></div>`:''}
+      ${paidAmt>0?`<div class="alert alert-green" style="margin-top:4px;font-size:11px">✅ Plus paid debt(s) of <b>KES ${fKES(paidAmt)}</b></div>`:''}
+    </div>
+
+    <!-- COGS -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ MONEY IN SOLD STOCK (Cost of Goods Sold)</div>
+      <div class="formula-row"><span style="color:var(--text2)">Buying cost of all sold items</span><span class="mono" style="font-weight:800;color:var(--red)">KES ${fKES(cogs)}</span></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➖ EXPENSES</div>
+      ${Object.entries(expByCat).map(([k,v])=>`<div class="formula-row"><span style="color:var(--text2)">${esc(k)}</span><span class="mono" style="color:var(--purple)">KES ${fKES(v)}</span></div>`).join('')}
+      <div class="formula-row total"><span style="font-weight:800">Total Expenses</span><span class="mono" style="font-weight:800;color:var(--purple)">KES ${fKES(totE)}</span></div>
+    </div>
+
+    <!-- FORMULA -->
+    <div class="card" style="margin-bottom:10px;background:rgba(56,189,248,.03);border-color:rgba(56,189,248,.15)">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📐 PROFIT CALCULATION</div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px">
+        <div class="formula-row"><span>SALES</span><span style="color:var(--green)">KES ${fKES(totS)}</span></div>
+        <div class="formula-row"><span>− Cost of Goods Sold</span><span style="color:var(--red)">KES ${fKES(cogs)}</span></div>
+        <div class="formula-row"><span>− Expenses</span><span style="color:var(--purple)">KES ${fKES(totE)}</span></div>
+        <div class="formula-row total">
+          <span style="font-size:14px">= NET PROFIT</span>
+          <span style="font-size:18px;color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}KES ${fKES(profit)}</span>
         </div>
       </div>
     </div>
 
-    <!-- Right: Info + actions -->
-    <div style="display:flex;flex-direction:column;gap:16px">
-
-      <!-- Account Details -->
-      <div class="card">
-        <div class="card-header"><h3>Account Details</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-            <div>
-              <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Role</div>
-              <div class="font-semibold" style="text-transform:capitalize">${(u.role||'Not assigned').replace(/_/g,' ')}</div>
-            </div>
-            <span class="badge badge-${u.role ? 'blue' : 'red'}">${u.role ? 'Assigned' : 'Pending'}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-            <div>
-              <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">School</div>
-              <div class="font-semibold">${school ? school.name : 'Not assigned'}</div>
-            </div>
-            <span class="badge badge-${school ? 'green' : 'gray'}">${school ? school.status : 'N/A'}</span>
-          </div>
-          <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-            <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Account Status</div>
-            <div class="font-semibold">${u.is_active !== false ? '✅ Active' : '❌ Suspended'}</div>
-          </div>
-          <div style="padding:10px 0">
-            <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Member Since</div>
-            <div class="font-semibold">${joinDate}</div>
-          </div>
-        </div>
-      </div>
-
-      ${school ? `
-      <!-- School Info -->
-      <div class="card">
-        <div class="card-header"><h3>🏫 Your School</h3></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-          <div><div class="text-xs text-muted">Name</div><div class="font-semibold">${school.name}</div></div>
-          <div><div class="text-xs text-muted">Address</div><div class="font-semibold">${school.address||'—'}</div></div>
-          <div><div class="text-xs text-muted">Plan</div><span class="badge badge-purple">${capitalize(school.subscription_plan||'')}</span></div>
-          <div><div class="text-xs text-muted">Currency</div><div class="font-semibold">${school.currency||'KES'}</div></div>
-        </div>
-      </div>` : ''}
-
-      <!-- Sign Out -->
-      <div class="card">
-        <div class="card-header"><h3>Session</h3></div>
-        <div class="card-body">
-          <p style="font-size:.85rem;margin-bottom:14px">You are signed in via Google as <strong>${email}</strong>. Signing out will end this session.</p>
-          <button class="btn btn-danger btn-sm btn-full" onclick="handleSignOut()">⏻ Sign Out of EduTrackFee</button>
-        </div>
-      </div>
+    <!-- CURRENT STOCK VALUE -->
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 MONEY IN CURRENT STOCK</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Value of remaining inventory at selling price</div>
+      <div class="mono" style="font-size:24px;font-weight:800;color:var(--accent)">KES ${fKES(stkVal)}</div>
     </div>
-  </div>`;
-};
 
-/* ──────────────────────── ACCOUNT ACTIONS ───────────────────────────── */
-async function updateProfile() {
-  const nameEl = document.getElementById('acc-name');
-  const name   = nameEl?.value.trim();
-  if(!name) { showToast('Name cannot be empty.', 'error'); return; }
-  if(name === App.userDoc?.full_name) { showToast('No changes to save.', 'info'); return; }
+    <!-- SNAILING STOCK -->
+    ${snailProds.length?`
+    <div class="card" style="margin-bottom:10px;border-left:3px solid var(--yellow);background:rgba(251,191,36,.04)">
+      <div style="font-size:11px;font-weight:800;color:var(--yellow);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🐌 SNAILING STOCK</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Products with ≤ 1 unit sold in last 14 days</div>
+      ${snailProds.map(p=>`
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(51,65,85,.3)">
+          <span style="color:var(--text2)">${esc(p.name)}</span>
+          <span style="color:var(--yellow)">Qty: ${p.quantity} (Sold: ${sp[p.id]||0})</span>
+        </div>`).join('')}
+    </div>`:`
+    <div class="alert alert-green" style="margin-bottom:10px">✅ No snailing stock — all products moving well</div>`}
+  `;
+}
 
-  nameEl.disabled = true;
-  try {
-    await db.collection('users').doc(App.currentUser.uid).update({ full_name: name });
-    App.userDoc.full_name = name;
-    updateSidebarUser();
-    showToast('Display name updated!', 'success');
-  } catch(e) {
-    showToast('Failed to update name. Check your connection.', 'error');
-  } finally {
-    if(nameEl) nameEl.disabled = false;
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function openSettings(){
+  G('st_n').value=cShop?.name||''; G('st_l').value=cShop?.location||'';
+  openModal('mSettings');
+}
+function saveSettings(){
+  const n=getV('st_n').trim(),l=getV('st_l').trim();
+  if(!n){toast('Shop name required');return;}
+  db.collection('shops').doc(cShopId).update({name:n,location:l})
+    .then(()=>{
+      cShop.name=n;cShop.location=l;
+      setTxt('sh_name',n);setTxt('sh_loc',l);setTxt('d_sName',n);
+      // Keep session cache in sync
+      if(cUser) saveSession('shop', cUser, cShopId, cShop);
+      closeModal('mSettings');toast('Settings saved!');
+    })
+    .catch(e=>toast('Error: '+e.message));
+}
+
+// ═══════════════════════════════════════════════
+// AUDIT
+// ═══════════════════════════════════════════════
+function onAuditChange(){
+  const t=getV('auditType');
+  G('auditDayF').style.display=t==='day'?'block':'none';
+  G('auditWeekF').style.display=t==='week'?'block':'none';
+  G('auditMonthF').style.display=t==='month'?'block':'none';
+}
+
+async function genAudit(){
+  const t=getV('auditType');
+  const now=new Date();let start,end,label;
+  if(t==='today'){
+    start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59,999);
+    label='Today, '+fDate(start);
+  }else if(t==='thisWeek'){
+    const dow=now.getDay()||7;
+    start=new Date(now);start.setDate(now.getDate()-(dow-1));start.setHours(0,0,0,0);
+    end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59,999);
+    label=`This Week (${fDate(start)} – ${fDate(end)})`;
+  }else if(t==='thisMonth'){
+    start=new Date(now.getFullYear(),now.getMonth(),1);
+    end=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59,999);
+    label=start.toLocaleString('en-KE',{month:'long',year:'numeric'});
+  }else if(t==='day'){
+    const v=getV('auditDay');if(!v){toast('Select a date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(v+'T23:59:59');label=fDate(start);
+  }else if(t==='week'){
+    const v=getV('auditWkStart');if(!v){toast('Select week start date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
+    label=`Week of ${fDate(start)}`;
+  }else if(t==='month'){
+    const v=getV('auditMo');if(!v){toast('Select a month');return;}
+    const[yr,mo]=v.split('-');
+    start=new Date(+yr,+mo-1,1);end=new Date(+yr,+mo,0,23,59,59,999);
+    label=start.toLocaleString('en-KE',{month:'long',year:'numeric'});
+  }
+  toast('Generating report...');
+  try{
+    const sTS=firebase.firestore.Timestamp.fromDate(start);
+    const eTS=firebase.firestore.Timestamp.fromDate(end);
+    const sDate=start.toISOString().split('T')[0];
+    const eDate=end.toISOString().split('T')[0];
+    const[slSnap,exSnap,dbSnap]=await Promise.all([
+      db.collection(`shops/${cShopId}/sales`).where('date','>=',sTS).where('date','<=',eTS).orderBy('date','desc').get(),
+      db.collection(`shops/${cShopId}/expenses`).where('date','>=',sDate).where('date','<=',eDate).get(),
+      db.collection(`shops/${cShopId}/debtors`).where('createdAt','>=',sTS).where('createdAt','<=',eTS).get()
+    ]);
+    const sales=slSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const expenses=exSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const debtors=dbSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const tS=sales.reduce((s,x)=>s+(x.totalSellingPrice||0),0);
+    const tC=sales.reduce((s,x)=>s+(x.totalBuyingPrice||0),0);
+    const tE=expenses.reduce((s,e)=>s+(e.amount||0),0);
+    const profit=tS-(tC+tE);
+    const unpaidD=debtors.filter(d=>d.status==='active').reduce((s,d)=>s+(d.amount||0),0);
+    auditData={label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD,sDate,eDate,sTS,eTS};
+    showAudit();
+  }catch(e){toast('Error: '+e.message);console.error(e);}
+}
+
+function showAudit(){
+  const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
+  const sn=cShop?.name||'Shop';
+  const c=G('auditOutput');
+  c.style.display='block';
+  c.innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:800">${esc(sn)}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">Audit Report: ${esc(label)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">Generated: ${new Date().toLocaleString('en-KE')}</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat green"><div class="lbl">Sales</div><div class="val" style="color:var(--green);font-size:14px">KES ${fKES(tS)}</div></div>
+      <div class="stat red"><div class="lbl">COGS</div><div class="val" style="color:var(--red);font-size:14px">KES ${fKES(tC)}</div></div>
+      <div class="stat purple"><div class="lbl">Expenses</div><div class="val" style="color:var(--purple);font-size:14px">KES ${fKES(tE)}</div></div>
+      <div class="stat${profit>=0?' green':' red'}"><div class="lbl">Profit</div><div class="val" style="color:${profit>=0?'var(--green)':'var(--red)'};font-size:14px">${profit>=0?'+':''}KES ${fKES(profit)}</div></div>
+    </div>
+    ${unpaidD>0?`<div class="alert alert-red" style="margin-bottom:12px">⚠️ Includes unpaid debts of <b>KES ${fKES(unpaidD)}</b></div>`:''}
+    <!-- Sales -->
+    <div class="card" style="margin-bottom:10px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">SALES (${sales.length})</div>
+      ${sales.length?`<table class="tbl"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>Type</th></tr></thead>
+      <tbody>${sales.map(s=>`<tr><td>${esc(s.productName)}</td><td>${s.quantity}</td><td>KES ${fKES(s.totalSellingPrice)}</td><td>${s.isDebt?'⚠️ Debt':'✅ Cash'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No sales in this period</p>'}
+    </div>
+    <!-- Expenses -->
+    <div class="card" style="margin-bottom:10px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">EXPENSES (${expenses.length})</div>
+      ${expenses.length?`<table class="tbl"><thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead>
+      <tbody>${expenses.map(e=>`<tr><td>${esc(e.description)}</td><td>${e.date}</td><td>KES ${fKES(e.amount)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No expenses in this period</p>'}
+    </div>
+    <!-- Debtors -->
+    <div class="card" style="margin-bottom:12px;overflow-x:auto">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px">DEBTORS (${debtors.length})</div>
+      ${debtors.length?`<table class="tbl"><thead><tr><th>Name</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>${debtors.map(d=>`<tr><td>${esc(d.debtorName||'')}</td><td>${esc(d.productName)}</td><td>KES ${fKES(d.amount)}</td><td>${d.status==='paid'?'✅ Paid':'⚠️ Unpaid'}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text3);font-size:12px">No new debtors in this period</p>'}
+    </div>
+    <button onclick="dlPDF()" class="btn btn-accent" style="width:100%;padding:13px;font-size:15px;margin-bottom:8px">📥 Download PDF Report</button>
+  `;
+  c.scrollIntoView({behavior:'smooth'});
+}
+
+function dlPDF(){
+  if(!auditData){toast('Generate a report first');return;}
+  const{label,sales,expenses,debtors,tS,tC,tE,profit,unpaidD}=auditData;
+  const sn=cShop?.name||'Shop';
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  // Header
+  doc.setFillColor(15,23,42);doc.rect(0,0,210,30,'F');
+  doc.setFillColor(30,58,138);doc.rect(0,0,210,2,'F');
+  doc.setTextColor(241,245,249);doc.setFontSize(17);doc.setFont('helvetica','bold');
+  doc.text(sn,105,13,{align:'center'});
+  doc.setFontSize(11);doc.setFont('helvetica','normal');doc.setTextColor(148,163,184);
+  doc.text(`Audit Report — ${label}`,105,21,{align:'center'});
+  doc.setFontSize(8);doc.setTextColor(100,116,139);
+  doc.text(`Generated: ${new Date().toLocaleString('en-KE')}`,105,27,{align:'center'});
+  doc.setTextColor(0,0,0);
+  let y=40;
+  doc.setFontSize(13);doc.setFont('helvetica','bold');doc.text('FINANCIAL SUMMARY',14,y);y+=8;
+  const rows=[['Total Sales:',`KES ${fKES(tS)}`],['Cost of Goods Sold:',`KES ${fKES(tC)}`],['Total Expenses:',`KES ${fKES(tE)}`],['NET PROFIT:',`KES ${fKES(profit)}`]];
+  if(unpaidD>0)rows.push(['Unpaid Debts:',`KES ${fKES(unpaidD)}`]);
+  doc.setFontSize(10);
+  rows.forEach(([l,v])=>{
+    doc.setFont('helvetica',l.startsWith('NET')?'bold':'normal');
+    doc.text(l,14,y);doc.text(v,196,y,{align:'right'});y+=7;
+  });
+  y+=5;
+  if(sales.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('SALES',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Product','Qty','Unit Price','Total','Type']],body:sales.map(s=>[s.productName,s.quantity,`KES ${fKES(s.sellingPricePerUnit)}`,`KES ${fKES(s.totalSellingPrice)}`,s.isDebt?'Debt':'Cash']),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[30,58,138],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+    y=doc.lastAutoTable.finalY+8;
+  }
+  if(expenses.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('EXPENSES',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Description','Date','Amount']],body:expenses.map(e=>[e.description,e.date,`KES ${fKES(e.amount)}`]),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[109,40,217],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+    y=doc.lastAutoTable.finalY+8;
+  }
+  if(debtors.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('DEBTORS',14,y);y+=3;
+    doc.autoTable({startY:y,margin:{left:14,right:14},head:[['Name','Product','Qty','Amount','Status']],body:debtors.map(d=>[d.debtorName||'',d.productName,d.quantity,`KES ${fKES(d.amount)}`,d.status==='paid'?'Paid':'Unpaid']),styles:{fontSize:8,textColor:[30,41,59]},headStyles:{fillColor:[185,28,28],textColor:[255,255,255]},alternateRowStyles:{fillColor:[241,245,249]}});
+  }
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);doc.setFontSize(8);doc.setTextColor(148,163,184);
+    doc.text('Powered by Mr. Saisi Nyongesa Sammy',105,290,{align:'center'});
+    doc.text(`Page ${i} of ${pages}`,196,290,{align:'right'});
+  }
+  doc.save(`${sn.replace(/\s+/g,'_')}_Audit_${label.replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
+  toast('PDF downloaded! 📄');
+}
+
+async function delAuditRecs(){
+  const t=getV('auditType');
+  if(!['day','week'].includes(t)){toast('Delete only available for Specific Day or Specific Week');return;}
+  let start,end,label;
+  if(t==='day'){
+    const v=getV('auditDay');if(!v){toast('Select a date');return;}
+    start=new Date(v+'T00:00:00');end=new Date(v+'T23:59:59');label=fDate(start);
+  }else{
+    const v=getV('auditWkStart');if(!v){toast('Select week start');return;}
+    start=new Date(v+'T00:00:00');end=new Date(start);end.setDate(start.getDate()+6);end.setHours(23,59,59);
+    label=`Week of ${fDate(start)}`;
+  }
+  confirm2(`Delete Records: ${label}`,'All sales, expenses and debtor records for this period will be permanently deleted. This cannot be undone!',async()=>{
+    try{
+      toast('Deleting...');
+      const sTS=firebase.firestore.Timestamp.fromDate(start);
+      const eTS=firebase.firestore.Timestamp.fromDate(end);
+      const sDate=start.toISOString().split('T')[0];
+      const eDate=end.toISOString().split('T')[0];
+      const[sl,ex,db2]=await Promise.all([
+        db.collection(`shops/${cShopId}/sales`).where('date','>=',sTS).where('date','<=',eTS).get(),
+        db.collection(`shops/${cShopId}/expenses`).where('date','>=',sDate).where('date','<=',eDate).get(),
+        db.collection(`shops/${cShopId}/debtors`).where('createdAt','>=',sTS).where('createdAt','<=',eTS).get()
+      ]);
+      const batch=db.batch();
+      sl.forEach(d=>batch.delete(d.ref));
+      ex.forEach(d=>batch.delete(d.ref));
+      db2.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      G('auditOutput').style.display='none';
+      toast(`Records for ${label} deleted`);
+    }catch(e){toast('Error: '+e.message);}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PWA SERVICE WORKER — cache-first offline shell
+// ═══════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  const CACHE='shopmaster-v2';
+  const SHELL=[
+    'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
+    'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'
+  ];
+  const sw=`
+const CACHE='${CACHE}';
+const SKIP_HOSTS=['firestore.googleapis.com','firebase.googleapis.com','identitytoolkit.googleapis.com','securetoken.googleapis.com','accounts.google.com'];
+self.addEventListener('install',e=>{
+  e.waitUntil(
+    caches.open(CACHE).then(c=>
+      Promise.allSettled(${JSON.stringify(SHELL)}.map(u=>
+        fetch(u,{mode:'cors'}).then(r=>{if(r.ok)c.put(u,r);}).catch(()=>{})
+      ))
+    ).then(()=>self.skipWaiting())
+  );
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(
+    caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+    .then(()=>self.clients.claim())
+  );
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const u=new URL(e.request.url);
+  if(SKIP_HOSTS.some(h=>u.hostname.includes(h)))return;
+  e.respondWith(
+    caches.match(e.request).then(hit=>{
+      const net=fetch(e.request).then(r=>{
+        if(r&&r.ok&&r.type!=='opaque'){
+          const cl=r.clone();
+          caches.open(CACHE).then(c=>c.put(e.request,cl));
+        }
+        return r;
+      }).catch(()=>null);
+      return hit||(net.then(r=>r||new Response('Offline',{status:503})));
+    })
+  );
+});
+`;
+  try{
+    navigator.serviceWorker.register(
+      URL.createObjectURL(new Blob([sw],{type:'application/javascript'})),
+      {scope:'./'}
+    ).catch(()=>{});
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+// INSTALL PROMPT
+// ═══════════════════════════════════════════════
+let _dPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _dPrompt=e;
+  // Delay banner slightly so it doesn't appear on page load
+  setTimeout(()=>{
+    if(!localStorage.getItem('sm_install_dismissed')){
+      document.getElementById('installBanner').classList.add('show');
+    }
+  },4000);
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('installBanner').classList.remove('show');
+  _dPrompt=null;
+  toast('✅ ShopMaster Pro installed!');
+});
+async function doInstall(){
+  if(!_dPrompt)return;
+  _dPrompt.prompt();
+  const{outcome}=await _dPrompt.userChoice;
+  _dPrompt=null;
+  document.getElementById('installBanner').classList.remove('show');
+  if(outcome==='accepted')toast('🎉 Installing ShopMaster Pro…');
+}
+function dismissInstall(){
+  document.getElementById('installBanner').classList.remove('show');
+  localStorage.setItem('sm_install_dismissed','1');
+}
+
+// ═══════════════════════════════════════════════
+// ONLINE / OFFLINE INDICATOR
+// ═══════════════════════════════════════════════
+function updateNetStatus(){
+  const pill=document.getElementById('offlinePill');
+  if(!navigator.onLine){
+    pill.classList.add('show');
+  } else {
+    pill.classList.remove('show');
   }
 }
+window.addEventListener('online', ()=>{updateNetStatus();toast('🌐 Back online');});
+window.addEventListener('offline',()=>{updateNetStatus();toast('📴 Offline — using cached data');});
+updateNetStatus();
 
-/* ──────────────────────── MODALS ────────────────────────────────────── */
-function openModal(html) {
-  const c = document.getElementById('modal-container');
-  c.innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">${html}</div>`;
-}
-function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
-
-function openAddSchoolModal() {
-  openModal(`
-  <div class="modal">
-    <div class="modal-header"><h3>➕ Add New School</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="two-col">
-        <div class="form-group"><label>School Name</label><input type="text" placeholder="e.g. Sunrise Academy" /></div>
-        <div class="form-group"><label>Admin Email</label><input type="email" placeholder="admin@school.ac.ke" /></div>
-      </div>
-      <div class="two-col">
-        <div class="form-group"><label>Phone</label><input type="tel" placeholder="0700000000" /></div>
-        <div class="form-group"><label>Max Students</label><input type="number" value="500" /></div>
-      </div>
-      <div class="form-group"><label>Address</label><input type="text" placeholder="City, County, Kenya" /></div>
-      <div class="form-group"><label>Subscription Plan</label>
-        <div class="select-wrap"><select><option>basic</option><option>standard</option><option selected>premium</option></select></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('School created & admin invited!','success');closeModal()">Create School</button>
-    </div>
-  </div>`);
-}
-
-function openAddStudentModal() {
-  openModal(`
-  <div class="modal">
-    <div class="modal-header"><h3>➕ Add Student</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="two-col">
-        <div class="form-group"><label>First Name</label><input type="text" placeholder="Amani" /></div>
-        <div class="form-group"><label>Last Name</label><input type="text" placeholder="Wanjiku" /></div>
-      </div>
-      <div class="two-col">
-        <div class="form-group"><label>Admission No.</label><input type="text" placeholder="ADM-001" /></div>
-        <div class="form-group"><label>Date of Birth</label><input type="date" /></div>
-      </div>
-      <div class="two-col">
-        <div class="form-group"><label>Class / Stream</label>
-          <div class="select-wrap"><select>${MOCK.classes.map(c=>`<option>${c.full_name}</option>`).join('')}</select></div>
-        </div>
-        <div class="form-group"><label>Gender</label>
-          <div class="select-wrap"><select><option>female</option><option>male</option><option>other</option></select></div>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="two-col">
-        <div class="form-group"><label>Parent / Guardian</label><input type="text" placeholder="Grace Wanjiku" /></div>
-        <div class="form-group"><label>Parent Phone</label><input type="tel" placeholder="0712345678" /></div>
-      </div>
-      <div class="form-group"><label>Parent Email (optional)</label><input type="email" placeholder="parent@email.com" /></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('Student added successfully!','success');closeModal()">Add Student</button>
-    </div>
-  </div>`);
-}
-
-function openRecordPaymentModal() {
-  openModal(`
-  <div class="modal">
-    <div class="modal-header"><h3>💳 Record Payment</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Select Student</label>
-        <div class="select-wrap"><select>
-          <option value="">-- Select Student --</option>
-          ${MOCK.students.filter(s=>s.status==='active').map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.student_id})</option>`).join('')}
-        </select></div>
-      </div>
-      <div class="form-group"><label>Term</label>
-        <div class="select-wrap"><select>${MOCK.terms.map(t=>`<option ${t.is_current?'selected':''}>${t.name}</option>`).join('')}</select></div>
-      </div>
-      <div class="form-group"><label>Fee Item</label>
-        <div class="select-wrap"><select>
-          ${MOCK.feeStructures.map(f=>`<option value="${f.id}">${f.fee_name} — KES ${f.amount.toLocaleString()}</option>`).join('')}
-        </select></div>
-      </div>
-      <div class="two-col">
-        <div class="form-group"><label>Amount (KES)</label><input type="number" placeholder="0" /></div>
-        <div class="form-group"><label>Payment Method</label>
-          <div class="select-wrap"><select><option>cash</option><option>mobile_money</option><option>bank_transfer</option><option>cheque</option></select></div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="form-group"><label>Payment Date</label><input type="date" value="${new Date().toISOString().split('T')[0]}" /></div>
-        <div class="form-group"><label>Reference No. (optional)</label><input type="text" placeholder="M-Pesa or Bank ref" /></div>
-      </div>
-      <div class="form-group"><label>Notes</label><input type="text" placeholder="Any notes..." /></div>
-      <div style="background:var(--blue-pale);border-radius:8px;padding:10px 14px;font-size:.82rem;color:var(--blue)">
-        🧾 A receipt number will be auto-generated (RCP-XXXXXXX) upon saving.
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('Payment recorded! Receipt: RCP-0000005','success');closeModal()">Save Payment</button>
-    </div>
-  </div>`);
-}
-
-/* ──────────────────────── HELPER FORMATTERS ─────────────────────────── */
-function statusBadge(status) {
-  const map = { active:'green', suspended:'red', inactive:'gray', graduated:'purple', transferred:'sky' };
-  return `<span class="badge badge-${map[status]||'gray'}">${capitalize(status)}</span>`;
-}
-function payStatusBadge(s) {
-  const map = { paid:'green', partial:'amber', unpaid:'red', overpaid:'purple', waived:'gray' };
-  return `<span class="badge badge-${map[s]||'gray'}">${capitalize(s)}</span>`;
-}
-function termStatusBadge(s) {
-  const map = { active:'green', closed:'gray', upcoming:'sky' };
-  return `<span class="badge badge-${map[s]||'gray'}">${capitalize(s)}</span>`;
-}
-function formatMethod(m) {
-  const icons = { cash:'💵', mobile_money:'📱', bank_transfer:'🏦', cheque:'📝', online:'💻' };
-  return `${icons[m]||''} ${m.replace('_',' ')}`;
-}
-function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
-
-/* ──────────────────────── TOAST ─────────────────────────────────────── */
-function showToast(msg, type='info') {
-  const icons = { success:'✅', error:'❌', info:'ℹ️' };
-  const tc = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `${icons[type]} ${msg}`;
-  tc.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; el.style.transition = '.3s'; setTimeout(()=>el.remove(), 300); }, 3500);
-}
-
-/* ──────────────────────── SIDEBAR TOGGLE ────────────────────────────── */
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('open');
-}
 </script>
 </body>
 </html>
